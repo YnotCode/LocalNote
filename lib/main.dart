@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:local_note_2/group_page.dart';
 import 'package:local_note_2/firebase_options.dart';
 import 'package:local_note_2/location_ios.dart';
+import 'package:local_note_2/map.dart';
 import 'note_upload.dart';
 
 void main() async {
@@ -24,8 +25,12 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       home: Scaffold(
-        // body: TextFieldExampleApp()
-        body: NoteUploadWidget(onAddNote: (String ) {  },)
+        body: MainMap(),
+        bottomNavigationBar: SafeArea(
+          bottom: true,
+          child: BottomNavBar(),
+        ),
+        
       ),
     );
   }
@@ -44,7 +49,7 @@ class BottomNavBar extends StatelessWidget {
         CupertinoButton(
           child: const Icon(CupertinoIcons.group, size: 40.0, color: Colors.black),
           onPressed: (){
-            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const GroupPage()));
+            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => LocationTracker()));
           },
         ),
         CupertinoButton(
