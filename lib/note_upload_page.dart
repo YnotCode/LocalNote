@@ -43,6 +43,7 @@ class NoteUploadPage extends StatelessWidget {
                     "location": GeoPoint(position.latitude, position.longitude),
                     "title": "NOTE"
                   });
+              Navigator.of(context).pop();
               }
               catch(e){
                 debugPrint("$e");
