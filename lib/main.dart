@@ -16,7 +16,7 @@ import 'note_upload.dart';
 import 'friends.dart';
 
 void main() async {
-  SharedPreferences.setMockInitialValues({});
+  //SharedPreferences.setMockInitialValues({});
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -41,11 +41,16 @@ class _MainAppState extends State<MainApp> {
     // TODO: implement initState
     SharedPreferences.getInstance().then((prefs){
       String? x = prefs.getString("logged-in");
+      debugPrint("HELLO!!");
       if (x == null){
-        userIsLoggedIn = false;
+        setState(() {
+          userIsLoggedIn = false;
+        });
       }
       else if (x == "true"){
-        userIsLoggedIn = true;
+        setState(() {
+          userIsLoggedIn = true;
+        });
       }
     });
     super.initState();

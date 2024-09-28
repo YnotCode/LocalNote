@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:local_note_2/note_upload.dart';
 
 class NoteUploadPage extends StatelessWidget {
@@ -8,6 +9,8 @@ class NoteUploadPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+
     return Container(
       color: Colors.white,
       child: SafeArea(
@@ -26,13 +29,24 @@ class NoteUploadPage extends StatelessWidget {
                 Expanded(child: Container(),)
               ]
             ),
-            NoteUploadWidget(onAddNote: (String note){
-              FirebaseFirestore.instance.collection("notes").add({
-                "note": note,
-                "creator": "+1111111111",
-                "location": "37.7749,-122.4194",
-                "title": "NOTE"
-              });
+            NoteUploadWidget(onAddNote: (String note) async {
+              try{
+                  Position position = await Geolocator.getCurrentPosition(
+                    desiredAccuracy: LocationAccuracy.high,
+                  );
+                  await Geolocator.getCurrentPosition(
+                    desiredAccuracy: LocationAccuracy.high,
+                  );
+                  FirebaseFirestore.instance.collection("notes").add({
+                    "note": note,
+                    "creator": "+1111111111",
+                    "location": GeoPoint(position.latitude, position.longitude),
+                    "title": "NOTE"
+                  });
+              }
+              catch(e){
+                debugPrint("$e");
+              }              
             }),
       
           ],
