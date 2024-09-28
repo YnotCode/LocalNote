@@ -8,7 +8,6 @@ import 'package:local_note_2/group_page.dart';
 import 'package:local_note_2/firebase_options.dart';
 import 'package:local_note_2/location_ios.dart';
 import 'note_upload.dart';
-import 'log_in_form.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +22,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: Scaffold(
         body: Center(
           child: LocationTracker(),
@@ -64,7 +63,7 @@ class BottomNavBar extends StatelessWidget {
           child: const Icon(CupertinoIcons.settings, size: 40.0, color: Colors.black),
           onPressed: () async{
             // await FirebaseAuth.instance.verifyPhoneNumber(
-            //     phoneNumber: '+1-734-323-8630',
+            //     phoneNumber: '+1-734-383-3455',
             //     verificationCompleted: (PhoneAuthCredential credential) {},
             //     verificationFailed: (FirebaseAuthException e) {},
             //     codeSent: (String verificationId, int? resendToken) {},
@@ -80,6 +79,8 @@ class BottomNavBar extends StatelessWidget {
 
 
 class NoteUploadApp extends StatelessWidget {
+  const NoteUploadApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -87,12 +88,14 @@ class NoteUploadApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.yellow,
       ),
-      home: NoteUploadHome(),
+      home: const NoteUploadHome(),
     );
   }
 }
 
 class NoteUploadHome extends StatefulWidget {
+  const NoteUploadHome({super.key});
+
   @override
   _NoteUploadHomeState createState() => _NoteUploadHomeState();
 }
@@ -110,7 +113,7 @@ class _NoteUploadHomeState extends State<NoteUploadHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Note App'),
+        title: const Text('Note App'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -118,7 +121,7 @@ class _NoteUploadHomeState extends State<NoteUploadHome> {
           children: [
             // Use the NoteUploadWidget and pass the callback
             NoteUploadWidget(onAddNote: _addNoteCallback),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             // Display saved sticky notes
             Expanded(
               child: ListView.builder(

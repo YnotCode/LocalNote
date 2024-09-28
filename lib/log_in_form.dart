@@ -6,11 +6,11 @@ class ObscuredTextField extends StatelessWidget {
   final IconData icon;
 
   const ObscuredTextField({
-    Key? key,
+    super.key,
     required this.controller,
     this.labelText = 'Enter Text',
     this.icon = Icons.lock,  // Default icon is lock for obscure text
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +44,10 @@ class LoginButton extends StatelessWidget {
   final String buttonText;
 
   const LoginButton({
-    Key? key,
+    super.key,
     required this.onPressed,
     this.buttonText = 'Log In',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

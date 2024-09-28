@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LocationTracker extends StatefulWidget {
+  const LocationTracker({super.key});
+
   @override
   _LocationTrackerState createState() => _LocationTrackerState();
 }
@@ -74,7 +76,7 @@ class _LocationTrackerState extends State<LocationTracker> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Location Tracker'),
+        title: const Text('Location Tracker'),
       ),
       body: Center(
         child: Column(
@@ -90,10 +92,10 @@ class _LocationTrackerState extends State<LocationTracker> {
                 _locationStatus,
                 textAlign: TextAlign.center,
               ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _getCurrentLocation,
-              child: Text('Get Current Location'),
+              child: const Text('Get Current Location'),
             ),
           ],
         ),
