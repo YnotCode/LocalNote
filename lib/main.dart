@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:local_note_2/group_page.dart';
 import 'package:local_note_2/firebase_options.dart';
 import 'package:local_note_2/location_ios.dart';
+import 'package:local_note_2/login_page.dart';
 import 'package:local_note_2/map.dart';
 import 'package:local_note_2/note_upload_page.dart';
 import 'note_upload.dart';
@@ -26,7 +27,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       home: Scaffold(
-        body: MainMap(),
+        body: LoginPage(),
         bottomNavigationBar: SafeArea(
           bottom: true,
           child: BottomNavBar(),
@@ -58,6 +59,7 @@ class BottomNavBar extends StatelessWidget {
           onPressed: () async {
             final doc = await FirebaseFirestore.instance.collection("test").doc("counter").get();
             debugPrint("${doc.data()?["count"]}"); 
+            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const NoteUploadPage()));
           },
         ),
         CupertinoButton(
@@ -70,7 +72,7 @@ class BottomNavBar extends StatelessWidget {
             //     codeSent: (String verificationId, int? resendToken) {},
             //     codeAutoRetrievalTimeout: (String verificationId) {},
             //   );
-            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const NoteUploadPage()));
+            
           },
         ),
 
