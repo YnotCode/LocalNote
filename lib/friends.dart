@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-class FollowersPage extends StatefulWidget {
+class CommunityPage extends StatefulWidget {
   @override
   _FollowersPageState createState() => _FollowersPageState();
 }
 
-class _FollowersPageState extends State<FollowersPage> {
+class _FollowersPageState extends State<CommunityPage> {
   // List of followers (Friends list)
   List<Follower> friends = List.generate(
     20, // Increased to demonstrate scrollability
@@ -182,6 +182,6 @@ void main() {
     theme: ThemeData(
       primarySwatch: Colors.blue,
     ),
-    home: FollowersPage(),
+    home: CommunityPage(),
   ));
 }
