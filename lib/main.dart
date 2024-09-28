@@ -25,13 +25,8 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        body: Center(
-          child: LocationTracker(),
-        ),
-        bottomNavigationBar: SafeArea(
-          bottom: true,
-          child: BottomNavBar(),
-        ),
+        // body: TextFieldExampleApp()
+        body: NoteUploadWidget(onAddNote: (String ) {  },)
       ),
     );
   }
