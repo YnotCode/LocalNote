@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
 
-class ObscuredTextFieldSample extends StatelessWidget {
-  const ObscuredTextFieldSample({super.key});
+class ObscuredTextFieldSample extends StatefulWidget {
+  final TextEditingController controller;
 
+  // Constructor to accept the TextEditingController from the parent
+  const ObscuredTextFieldSample({super.key, required this.controller});
+
+  @override
+  _ObscuredTextFieldSampleState createState() => _ObscuredTextFieldSampleState();
+}
+
+class _ObscuredTextFieldSampleState extends State<ObscuredTextFieldSample> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: 300,
       child: TextField(
+        controller: widget.controller, // Use the controller passed from the parent
         keyboardType: TextInputType.phone,  // Number keyboard
         decoration: InputDecoration(
           prefixIcon: Icon(Icons.phone, color: Colors.blueAccent),  // Add phone icon
@@ -29,8 +38,26 @@ class ObscuredTextFieldSample extends StatelessWidget {
   }
 }
 
-class TextFieldExampleApp extends StatelessWidget {
+class TextFieldExampleApp extends StatefulWidget {
   const TextFieldExampleApp({super.key});
+
+  @override
+  _TextFieldExampleAppState createState() => _TextFieldExampleAppState();
+}
+
+class _TextFieldExampleAppState extends State<TextFieldExampleApp> {
+  final TextEditingController _phoneController = TextEditingController();
+
+  @override
+  void dispose() {
+    _phoneController.dispose(); // Dispose of the controller when the widget is removed
+    super.dispose();
+  }
+
+  void _handleLoginButtonPressed() {
+    String phoneNumber = _phoneController.text;
+    print("Phone Number Entered: $phoneNumber");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,16 +76,11 @@ class TextFieldExampleApp extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Title or branding section
                 const SizedBox(height: 20),
-                // Obscured text field (phone number)
-                const ObscuredTextFieldSample(),
+                ObscuredTextFieldSample(controller: _phoneController),
                 const SizedBox(height: 20),
-                // Button to submit (login)
                 ElevatedButton(
-                  onPressed: () {
-                    // Add login logic here
-                  },
+                  onPressed: _handleLoginButtonPressed,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                     backgroundColor: Colors.blueAccent,
