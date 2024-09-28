@@ -8,12 +8,15 @@ import 'package:local_note_2/group_page.dart';
 import 'package:local_note_2/firebase_options.dart';
 import 'package:local_note_2/location_ios.dart';
 import 'package:local_note_2/login_page.dart';
+import 'package:local_note_2/map.dart';
 // import 'package:local_note_2/map.dart';
 import 'package:local_note_2/note_upload_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'note_upload.dart';
 import 'friends.dart';
 
 void main() async {
+  SharedPreferences.setMockInitialValues({});
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -21,19 +24,52 @@ void main() async {
   runApp(const MainApp());
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+
+  bool userIsLoggedIn = false;
+
+  @override 
+  void initState() {
+    
+    // TODO: implement initState
+    SharedPreferences.getInstance().then((prefs){
+      String? x = prefs.getString("logged-in");
+      if (x == null){
+        userIsLoggedIn = false;
+      }
+      else if (x == "true"){
+        userIsLoggedIn = true;
+      }
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
 
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        body: LoginPage(),
-        bottomNavigationBar: SafeArea(
+        body: userIsLoggedIn ? 
+          const MainMap()
+         : LoginPage(onSuccess: (phNumber) async {
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setString("logged-in", "true");
+          prefs.setString("phone-number", phNumber);
+          setState(() {
+            userIsLoggedIn = true;
+          });
+        },),
+        bottomNavigationBar: userIsLoggedIn ? const SafeArea(
           bottom: true,
           child: BottomNavBar(),
-        ),
+        ) : null,
         
       ),
     );

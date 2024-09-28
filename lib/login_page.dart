@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:local_note_2/location_ios.dart';
 
+import 'package:http/http.dart' as http;
+
 
 
 void sendVerification(String number) async {
@@ -71,7 +73,8 @@ Future<bool> verifyPhoneNumber(ph, code) async {
 
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final Function onSuccess;
+  const LoginPage({super.key, required this.onSuccess});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -121,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                   keyboardType: TextInputType.phone,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: "Email Address",
+                    hintText: "Phone Number",
                     hintStyle: TextStyle(color: Colors.white70),
                     filled: true,
                     fillColor: Colors.white24,
@@ -132,9 +135,26 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    sendVerification(controller.text);
+                    // ScaffoldMessenger.of(context).showSnackBar(
+                    //   SnackBar(content: Text('OTP has been sent to your phone number.'))
+                    // );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFFFB7268),  // Warm sunset peach
+                    padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text("Send Code", style: TextStyle(color: Colors.white, fontSize: 16)),
+                ),
+                SizedBox(height: 16),
                 TextField(
                   decoration: InputDecoration(
-                    hintText: "Password",
+                    hintText: "Verification Code",
                     hintStyle: TextStyle(color: Colors.white70),
                     filled: true,
                     fillColor: Colors.white24,
@@ -143,26 +163,22 @@ class _LoginPageState extends State<LoginPage> {
                       borderSide: BorderSide.none,
                     ),
                   ),
+                  controller: otpController,
                   obscureText: true,
                 ),
                 SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: () {
-                    final TwilioFlutter twilioFlutter = TwilioFlutter(
-                      accountSid: 'YOUR_SID', 
-                      authToken: 'YOUR_TOKEN', 
-                      twilioNumber: 'YOUR_TWILIO_NUMBER'
-                    );
-                    setState(() {
-                      otpCode = generateRandomNumber();
-                    });
-                    twilioFlutter.sendSMS(
-                      toNumber: controller.text, 
-                      messageBody: "Your OTP is $otpCode"
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('OTP has been sent to your phone number.'))
-                    );
+                  onPressed: () async {
+                    bool x = await verifyPhoneNumber(controller.text, otpController.text);
+                    if (x){
+                      widget.onSuccess(controller.text);
+                    }
+                    else{
+                      debugPrint("L bozo");
+                    }
+                    // ScaffoldMessenger.of(context).showSnackBar(
+                    //   SnackBar(content: Text('OTP has been sent to your phone number.'))
+                    // );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFFFB7268),  // Warm sunset peach
@@ -174,27 +190,28 @@ class _LoginPageState extends State<LoginPage> {
                   child: Text("Login", style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
                 SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () {}, 
-                      child: Text("Forgot Password?", style: TextStyle(color: Colors.white70)),
-                    ),
-                    TextButton(
-                      onPressed: () {}, 
-                      child: Text("Sign Up", style: TextStyle(color: Colors.white70)),
-                    ),
-                  ],
-                ),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     TextButton(
+                //       onPressed: () {}, 
+                //       child: Text("Forgot Password?", style: TextStyle(color: Colors.white70)),
+                //     ),
+                //     TextButton(
+                //       onPressed: () {}, 
+                //       child: Text("Sign Up", style: TextStyle(color: Colors.white70)),
+                //     ),
+                //   ],
+                // ),
                 SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
-                    setState(() {
-                      otpCode = generateRandomNumber();
-                    });
+                    // setState(() {
+                    //   otpCode = generateRandomNumber();
+                    // });
+                    sendVerification(controller.text);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('A new OTP has been sent to your phone number.'))
+                      SnackBar(content: Text('A new OTP will be sent to your phone number.'))
                     );
                   },
                   child: Text("Resend OTP", style: TextStyle(color: Colors.white70)),
