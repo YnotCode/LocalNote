@@ -8,7 +8,7 @@ import 'package:local_note_2/group_page.dart';
 import 'package:local_note_2/firebase_options.dart';
 import 'package:local_note_2/location_ios.dart';
 import 'package:local_note_2/login_page.dart';
-import 'package:local_note_2/map.dart';
+// import 'package:local_note_2/map.dart';
 import 'package:local_note_2/note_upload_page.dart';
 import 'note_upload.dart';
 
@@ -25,6 +25,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return const MaterialApp(
       home: Scaffold(
         body: LoginPage(),
