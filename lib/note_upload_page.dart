@@ -33,6 +33,7 @@ class NoteUploadPage extends StatelessWidget {
                 "location": "37.7749,-122.4194",
                 "title": "NOTE"
               });
+              Navigator.of(context).pop();
             }),
       
           ],
