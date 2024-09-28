@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:local_note_2/group_page.dart';
+import 'package:local_note_2/firebase_options.dart';
+
+FirebaseAuth auth = FirebaseAuth.instance;
 
 class ObscuredTextFieldSample extends StatefulWidget {
   final TextEditingController controller;
@@ -54,9 +61,19 @@ class _TextFieldExampleAppState extends State<TextFieldExampleApp> {
     super.dispose();
   }
 
-  void _handleLoginButtonPressed() {
-    String phoneNumber = _phoneController.text;
-    print("Phone Number Entered: $phoneNumber");
+  void _handleLoginButtonPressed() async {
+    String phoneNumber = "+1 ${_phoneController.text}";
+    try {
+      await auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) {},
+        verificationFailed: (FirebaseAuthException e) {},
+        codeSent: (String verificationId, int? resendToken) {},
+        codeAutoRetrievalTimeout: (String verificationId) {},
+      );
+    } catch (error) {
+      print(error);
+    }
   }
 
   @override
@@ -102,4 +119,11 @@ class _TextFieldExampleAppState extends State<TextFieldExampleApp> {
   }
 }
 
-void main() => runApp(const TextFieldExampleApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  runApp(const TextFieldExampleApp());
+}
