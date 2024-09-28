@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'toggle_notifications.dart';
-void main() {
-  runApp(const MyApp());
-}
+// void main() {
+//   runApp(const MyApp());
+// }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+// class MyApp extends StatelessWidget {
+//   const MyApp({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Settings Page Example',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const SettingsPage(),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'Settings Page Example',
+//       theme: ThemeData(
+//         primarySwatch: Colors.blue,
+//       ),
+//       home: const SettingsPage(),
+//     );
+//   }
+// }
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
