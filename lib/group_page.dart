@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:local_note_2/mainmap.dart';
+import 'package:local_note_2/map.dart';
 
 class GroupPage extends StatelessWidget {
   const GroupPage({super.key});

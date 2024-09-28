@@ -8,6 +8,7 @@ import 'package:local_note_2/group_page.dart';
 import 'package:local_note_2/firebase_options.dart';
 import 'package:local_note_2/location_ios.dart';
 import 'package:local_note_2/map.dart';
+import 'package:local_note_2/note_upload_page.dart';
 import 'note_upload.dart';
 
 void main() async {
@@ -69,6 +70,7 @@ class BottomNavBar extends StatelessWidget {
             //     codeSent: (String verificationId, int? resendToken) {},
             //     codeAutoRetrievalTimeout: (String verificationId) {},
             //   );
+            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const NoteUploadPage()));
           },
         ),
 

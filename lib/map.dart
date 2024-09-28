@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-
-import 'package:flutter_map/flutter_map.dart';
+// Removed unnecessary import of google_maps_flutter
 import 'package:latlong2/latlong.dart' as l;
 
 class MainMap extends StatefulWidget {
@@ -14,42 +12,89 @@ class MainMap extends StatefulWidget {
 }
 
 class _MainMapState extends State<MainMap> {
-
   Position? _currentPosition;
   String _locationStatus = 'Location not available';
 
   MapController mapController = MapController();
+  l.LatLng _currentCenter = l.LatLng(51.509364, -0.128928); // Default center
+  double _currentZoom = 9.2;
 
   @override
-  initState(){
-    _checkLocationPermission().then((_) => {
-      debugPrint("LOCATION STATUS: ${_locationStatus}")
+  void initState() {
+    super.initState();
+    _checkLocationPermission().then((_) {
+      debugPrint("LOCATION STATUS: $_locationStatus");
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    
-    return FlutterMap(
-      mapController: mapController,
-      options: MapOptions(
-        initialCenter: l.LatLng(_currentPosition?.latitude ?? 51.509364, _currentPosition?.longitude ?? -0.128928), // Center the map over London
-        initialZoom: 9.2,
-      ),
+    return Stack(
       children: [
-        TileLayer( // Display map tiles from any source
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', // OSMF's Tile Server
-          userAgentPackageName: 'com.example.app',
-          // And many more recommended properties!
-        ),
-        RichAttributionWidget( // Include a stylish prebuilt attribution widget that meets all requirments
-          attributions: [
-            TextSourceAttribution(
-              'OpenStreetMap contributors',
-              onTap: () => debugPrint("HELLO WORLD!!") // (external)
+        FlutterMap(
+          mapController: mapController,
+          options: MapOptions(
+            initialCenter: _currentCenter,
+            initialZoom: _currentZoom,
+            // Enable pinch-to-zoom and other gestures
+            interactionOptions: InteractionOptions(
+              flags: InteractiveFlag.all,
             ),
-            // Also add images...
+            onMapEvent: (MapEvent mapEvent) {
+              setState(() {
+                // Update current center and zoom level
+                _currentCenter = mapController.camera.center;
+                _currentZoom = mapController.camera.zoom;
+              });
+            },
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.app',
+            ),
+            RichAttributionWidget(
+              attributions: [
+                TextSourceAttribution(
+                  'OpenStreetMap contributors',
+                  onTap: () => debugPrint("HELLO WORLD!!"),
+                ),
+              ],
+            ),
           ],
+        ),
+        // Zoom controls at the bottom left corner
+        Positioned(
+          bottom: 20,
+          left: 20,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingActionButton(
+                mini: true,
+                heroTag: "zoomIn",
+                child: Icon(Icons.zoom_in),
+                onPressed: () {
+                  setState(() {
+                    _currentZoom += 1;
+                    mapController.move(_currentCenter, _currentZoom);
+                  });
+                },
+              ),
+              SizedBox(height: 10),
+              FloatingActionButton(
+                mini: true,
+                heroTag: "zoomOut",
+                child: Icon(Icons.zoom_out),
+                onPressed: () {
+                  setState(() {
+                    _currentZoom -= 1;
+                    mapController.move(_currentCenter, _currentZoom);
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -63,13 +108,14 @@ class _MainMapState extends State<MainMap> {
 
       setState(() {
         _currentPosition = position;
-        mapController.move(l.LatLng(position.latitude, position.longitude), 9.2);
+        _currentCenter = l.LatLng(position.latitude, position.longitude);
+        mapController.move(_currentCenter, _currentZoom);
         _locationStatus =
             'Lat: ${position.latitude}, Long: ${position.longitude}';
       });
 
-      debugPrint('Location: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}');
-      
+      debugPrint(
+          'Location: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}');
     } catch (e) {
       setState(() {
         _locationStatus = 'Error getting location: $e';
@@ -108,7 +154,5 @@ class _MainMapState extends State<MainMap> {
 
     // If permission is granted, get the current location
     await _getCurrentLocation();
-
-    
   }
 }

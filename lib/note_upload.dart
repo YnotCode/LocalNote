@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class NoteUploadWidget extends StatefulWidget {
@@ -22,6 +23,8 @@ class _NoteUploadWidgetState extends State<NoteUploadWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: MediaQuery.of(context).size.width * 0.8,
+      height: 400,
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.yellow[200],
@@ -36,12 +39,14 @@ class _NoteUploadWidgetState extends State<NoteUploadWidget> {
       ),
       child: Column(
         children: [
-          TextField(
+          CupertinoTextField(
             controller: _controller,
             maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'Write your note here...',
-              border: InputBorder.none,
+            placeholder: 'Write your note here...',
+            decoration: const BoxDecoration(
+              border: Border(
+                
+              ),
             ),
           ),
           const SizedBox(height: 10),
