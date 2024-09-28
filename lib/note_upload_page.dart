@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:local_note_2/map.dart';
 import 'package:local_note_2/note_upload.dart';
 
 class NoteUploadPage extends StatelessWidget {
