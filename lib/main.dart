@@ -7,10 +7,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:local_note_2/group_page.dart';
 import 'package:local_note_2/firebase_options.dart';
 import 'package:local_note_2/location_ios.dart';
+import 'package:local_note_2/login_page.dart';
+import 'package:local_note_2/map.dart';
+// import 'package:local_note_2/map.dart';
+import 'package:local_note_2/note_upload_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'note_upload.dart';
-import 'log_in_form.dart';
+import 'friends.dart';
 
 void main() async {
+  SharedPreferences.setMockInitialValues({});
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -18,15 +24,53 @@ void main() async {
   runApp(const MainApp());
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
   @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+
+  bool userIsLoggedIn = false;
+
+  @override 
+  void initState() {
+    
+    // TODO: implement initState
+    SharedPreferences.getInstance().then((prefs){
+      String? x = prefs.getString("logged-in");
+      if (x == null){
+        userIsLoggedIn = false;
+      }
+      else if (x == "true"){
+        userIsLoggedIn = true;
+      }
+    });
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       home: Scaffold(
-        // body: TextFieldExampleApp()
-        body: NoteUploadWidget(onAddNote: (String ) {  },)
+        body: userIsLoggedIn ? 
+          const MainMap()
+         : LoginPage(onSuccess: (phNumber) async {
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setString("logged-in", "true");
+          prefs.setString("phone-number", phNumber);
+          setState(() {
+            userIsLoggedIn = true;
+          });
+        },),
+        bottomNavigationBar: userIsLoggedIn ? const SafeArea(
+          bottom: true,
+          child: BottomNavBar(),
+        ) : null,
+        
       ),
     );
   }
@@ -45,7 +89,7 @@ class BottomNavBar extends StatelessWidget {
         CupertinoButton(
           child: const Icon(CupertinoIcons.group, size: 40.0, color: Colors.black),
           onPressed: (){
-            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const GroupPage()));
+            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => CommunityPage()));
           },
         ),
         CupertinoButton(
@@ -53,18 +97,20 @@ class BottomNavBar extends StatelessWidget {
           onPressed: () async {
             final doc = await FirebaseFirestore.instance.collection("test").doc("counter").get();
             debugPrint("${doc.data()?["count"]}"); 
+            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const NoteUploadPage()));
           },
         ),
         CupertinoButton(
           child: const Icon(CupertinoIcons.settings, size: 40.0, color: Colors.black),
-          onPressed: () async{
+          onPressed: () async {
             // await FirebaseAuth.instance.verifyPhoneNumber(
-            //     phoneNumber: '+1-734-323-8630',
+            //     phoneNumber: '+1-734-383-3455',
             //     verificationCompleted: (PhoneAuthCredential credential) {},
             //     verificationFailed: (FirebaseAuthException e) {},
             //     codeSent: (String verificationId, int? resendToken) {},
             //     codeAutoRetrievalTimeout: (String verificationId) {},
             //   );
+            
           },
         ),
 
@@ -75,6 +121,8 @@ class BottomNavBar extends StatelessWidget {
 
 
 class NoteUploadApp extends StatelessWidget {
+  const NoteUploadApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -82,12 +130,14 @@ class NoteUploadApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.yellow,
       ),
-      home: NoteUploadHome(),
+      home: const NoteUploadHome(),
     );
   }
 }
 
 class NoteUploadHome extends StatefulWidget {
+  const NoteUploadHome({super.key});
+
   @override
   _NoteUploadHomeState createState() => _NoteUploadHomeState();
 }
@@ -105,7 +155,7 @@ class _NoteUploadHomeState extends State<NoteUploadHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Note App'),
+        title: const Text('Note App'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -113,7 +163,7 @@ class _NoteUploadHomeState extends State<NoteUploadHome> {
           children: [
             // Use the NoteUploadWidget and pass the callback
             NoteUploadWidget(onAddNote: _addNoteCallback),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             // Display saved sticky notes
             Expanded(
               child: ListView.builder(
