@@ -8,9 +8,10 @@ import 'package:local_note_2/group_page.dart';
 import 'package:local_note_2/firebase_options.dart';
 import 'package:local_note_2/location_ios.dart';
 import 'package:local_note_2/login_page.dart';
-import 'package:local_note_2/map.dart';
+// import 'package:local_note_2/map.dart';
 import 'package:local_note_2/note_upload_page.dart';
 import 'note_upload.dart';
+import 'friends.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +26,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return const MaterialApp(
       home: Scaffold(
         body: LoginPage(),
@@ -51,7 +53,7 @@ class BottomNavBar extends StatelessWidget {
         CupertinoButton(
           child: const Icon(CupertinoIcons.group, size: 40.0, color: Colors.black),
           onPressed: (){
-            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => LocationTracker()));
+            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => CommunityPage()));
           },
         ),
         CupertinoButton(
@@ -64,7 +66,7 @@ class BottomNavBar extends StatelessWidget {
         ),
         CupertinoButton(
           child: const Icon(CupertinoIcons.settings, size: 40.0, color: Colors.black),
-          onPressed: () async{
+          onPressed: () async {
             // await FirebaseAuth.instance.verifyPhoneNumber(
             //     phoneNumber: '+1-734-383-3455',
             //     verificationCompleted: (PhoneAuthCredential credential) {},
