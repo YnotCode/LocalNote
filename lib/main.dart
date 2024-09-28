@@ -9,13 +9,6 @@ import 'package:local_note_2/firebase_options.dart';
 import 'package:local_note_2/location_ios.dart';
 import 'package:local_note_2/map.dart';
 import 'note_upload.dart';
-<<<<<<< Updated upstream
-=======
-import 'log_in_form.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-
-
->>>>>>> Stashed changes
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
