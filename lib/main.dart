@@ -19,61 +19,61 @@ import 'friends.dart';
 import 'setting_page.dart';
 import 'get_name_page.dart';
 
-import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
 
 
 import 'package:rxdart/rxdart.dart';
 
-final _messageStreamController = BehaviorSubject<RemoteMessage>();
+// final _messageStreamController = BehaviorSubject<RemoteMessage>();
 
 
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background, such as Firestore,
-  // make sure you call `initializeApp` before using other Firebase services.
-  debugPrint("Handling background message!!");
-  await Firebase.initializeApp();
+// @pragma('vm:entry-point')
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   // If you're going to use other Firebase services in the background, such as Firestore,
+//   // make sure you call `initializeApp` before using other Firebase services.
+//   debugPrint("Handling background message!!");
+//   await Firebase.initializeApp();
 
-  //print("Handling a background message: ${message.messageId}");
-}
+//   //print("Handling a background message: ${message.messageId}");
+// }
 
 
 
 void main() async {
   SharedPreferences.setMockInitialValues({});
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // await Firebase.initializeApp(
+  //     options: DefaultFirebaseOptions.currentPlatform,
+  // );
 
-  final messaging = FirebaseMessaging.instance;
+  // final messaging = FirebaseMessaging.instance;
 
-  final settings = await messaging.requestPermission(
-    alert: true,
-    announcement: false,
-    badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
-    sound: true,
-  );
+  // final settings = await messaging.requestPermission(
+  //   alert: true,
+  //   announcement: false,
+  //   badge: true,
+  //   carPlay: false,
+  //   criticalAlert: false,
+  //   provisional: false,
+  //   sound: true,
+  // );
 
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    debugPrint('Handling a foreground message: ${message.messageId}');
-    debugPrint('Message data: ${message.data}');
-    debugPrint('Message notification: ${message.notification?.title}');
-    debugPrint('Message notification: ${message.notification?.body}');
+  // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  //   debugPrint('Handling a foreground message: ${message.messageId}');
+  //   debugPrint('Message data: ${message.data}');
+  //   debugPrint('Message notification: ${message.notification?.title}');
+  //   debugPrint('Message notification: ${message.notification?.body}');
 
-    _messageStreamController.sink.add(message);
-  });
+  //   _messageStreamController.sink.add(message);
+  // });
 
-  // TODO: Set up background message handler
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // // TODO: Set up background message handler
+  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  debugPrint('Permission granted: ${settings.authorizationStatus}');
+  // debugPrint('Permission granted: ${settings.authorizationStatus}');
 
-  const topic = 'all';
-  await messaging.subscribeToTopic(topic);
+  // const topic = 'all';
+  // await messaging.subscribeToTopic(topic);
 
 
 
