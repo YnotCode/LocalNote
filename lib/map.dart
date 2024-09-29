@@ -16,13 +16,15 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   String _locationStatus = 'Location not available';
 
   final MapController mapController = MapController();
-  l.LatLng _currentCenter = l.LatLng(51.509364, -0.128928); // Default center
+
+  // Default center (e.g., London)
+  final l.LatLng _defaultCenter = l.LatLng(51.509364, -0.128928);
+  l.LatLng _currentCenter = l.LatLng(51.509364, -0.128928);
+
   double _currentZoom = 9.2;
   final double _defaultZoom = 12.0; // Default zoom level when centering
 
   AnimationController? _mapAnimationController;
-  Animation<l.LatLng>? _latLngAnimation;
-  Animation<double>? _zoomAnimation;
 
   @override
   void dispose() {
@@ -33,12 +35,15 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    // Fetch the current location when the widget initializes
     _checkLocationPermission().then((_) {
       debugPrint("LOCATION STATUS: $_locationStatus");
     });
   }
 
-  void _animateMapMovement(l.LatLng destCenter, double destZoom, {int duration = 700}) {
+  // Animate the map movement
+  void _animateMapMovement(l.LatLng destCenter, double destZoom,
+      {int duration = 700}) {
     // Dispose of any previous animation controller
     _mapAnimationController?.dispose();
 
@@ -88,32 +93,32 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     // Create a list of markers
     final List<Marker> markers = [];
 
-    // If the current position is available, add a marker at that location
-    if (_currentPosition != null) {
-      markers.add(
-        Marker(
-          point: l.LatLng(
-            _currentPosition!.latitude,
-            _currentPosition!.longitude,
+    // Determine the point for the marker
+    final l.LatLng markerPoint = _currentPosition != null
+        ? l.LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+        : _defaultCenter; // Use default center if current position is unavailable
+
+    // Add a marker at the determined point
+    markers.add(
+      Marker(
+        point: markerPoint,
+        width: 40.0,
+        height: 40.0,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.blue.withOpacity(0.7),
+            shape: BoxShape.circle,
           ),
-          width: 40.0,
-          height: 40.0,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.7),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Icon(
-                Icons.my_location,
-                color: Colors.white,
-                size: 20.0,
-              ),
+          child: Center(
+            child: Icon(
+              Icons.my_location,
+              color: Colors.white,
+              size: 20.0,
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
 
     return Stack(
       children: [
@@ -124,11 +129,13 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
             initialZoom: _currentZoom,
             crs: const Epsg3857(),
             onMapEvent: (MapEvent mapEvent) {
-              setState(() {
-                // Update current center and zoom from mapEvent
-                _currentCenter = mapEvent.camera.center;
-                _currentZoom = mapEvent.camera.zoom;
-              });
+              if (mapEvent is MapEventMove) {
+                // Use mapEvent's properties to update the center and zoom
+                setState(() {
+                  _currentCenter = mapEvent.camera.center;
+                  _currentZoom = mapEvent.camera.zoom;
+                });
+              }
             },
           ),
           children: [
@@ -136,17 +143,8 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.example.app',
             ),
-            if (markers.isNotEmpty)
-              MarkerLayer(
-                markers: markers,
-              ),
-            RichAttributionWidget(
-              attributions: [
-                TextSourceAttribution(
-                  'OpenStreetMap contributors',
-                  onTap: () => debugPrint("Attribution tapped!"),
-                ),
-              ],
+            MarkerLayer(
+              markers: markers,
             ),
           ],
         ),
@@ -194,20 +192,19 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
             heroTag: "centerMap",
             child: Icon(Icons.my_location),
             onPressed: () {
-              if (_currentPosition != null) {
-                final destCenter = l.LatLng(
-                  _currentPosition!.latitude,
-                  _currentPosition!.longitude,
-                );
-                setState(() {
-                  _animateMapMovement(destCenter, _defaultZoom);
-                  _currentCenter = destCenter;
-                  _currentZoom = _defaultZoom;
-                });
-              } else {
-                // Optionally handle the case when the current position is not available
-                debugPrint('Current position not available');
-              }
+              // Center the map on the current position if available, otherwise on the default center
+              final destCenter = _currentPosition != null
+                  ? l.LatLng(
+                      _currentPosition!.latitude,
+                      _currentPosition!.longitude,
+                    )
+                  : _defaultCenter;
+
+              setState(() {
+                _animateMapMovement(destCenter, _defaultZoom);
+                _currentCenter = destCenter;
+                _currentZoom = _defaultZoom;
+              });
             },
           ),
         ),
@@ -237,11 +234,61 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     } catch (e) {
       setState(() {
         _locationStatus = 'Error getting location: $e';
+        _currentPosition = null; // Ensure current position is null
+        // Move to default position if location can't be found
+        _animateMapMovement(_defaultCenter, _defaultZoom);
+        _currentCenter = _defaultCenter;
+        _currentZoom = _defaultZoom;
       });
+      debugPrint('Error getting location: $e');
     }
   }
 
   Future<void> _checkLocationPermission() async {
-    // ... (rest of the method remains the same)
+    // Check if location services are enabled
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      setState(() {
+        _locationStatus = 'Location services are disabled.';
+        _currentPosition = null;
+        // Move to default position
+        _animateMapMovement(_defaultCenter, _defaultZoom);
+        _currentCenter = _defaultCenter;
+        _currentZoom = _defaultZoom;
+      });
+      return;
+    }
+
+    // Check for location permission
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        setState(() {
+          _locationStatus = 'Location permission denied';
+          _currentPosition = null;
+          // Move to default position
+          _animateMapMovement(_defaultCenter, _defaultZoom);
+          _currentCenter = _defaultCenter;
+          _currentZoom = _defaultZoom;
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      setState(() {
+        _locationStatus = 'Location permissions are permanently denied.';
+        _currentPosition = null;
+        // Move to default position
+        _animateMapMovement(_defaultCenter, _defaultZoom);
+        _currentCenter = _defaultCenter;
+        _currentZoom = _defaultZoom;
+      });
+      return;
+    }
+
+    // If permission is granted, get the current location
+    await _getCurrentLocation();
   }
 }

@@ -71,6 +71,18 @@ Future<bool> verifyPhoneNumber(ph, code) async {
 
 }
 
+String phoneNumberNormalization(String phoneNumber) {
+
+  if (!RegExp(r'^[0-9+\-]+$').hasMatch(phoneNumber) || phoneNumber.length < 10) {
+    return "Error";
+  }
+
+  String normalizedNumber = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+  if (normalizedNumber.length > 10) {
+    normalizedNumber = normalizedNumber.substring(normalizedNumber.length - 10);
+  }
+  return normalizedNumber;
+}
 
 class LoginPage extends StatefulWidget {
   final Function onSuccess;
@@ -137,10 +149,19 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
-                    sendVerification(controller.text);
-                    // ScaffoldMessenger.of(context).showSnackBar(
-                    //   SnackBar(content: Text('OTP has been sent to your phone number.'))
-                    // );
+                    String normalizedPhoneNumber = phoneNumberNormalization(controller.text);
+                    if (normalizedPhoneNumber != "Error") {
+                      sendVerification('+1$normalizedPhoneNumber');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('OTP has been sent to your phone number.'))
+                    );
+                    }
+                    else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Please enter a valid phone number.'), backgroundColor: Colors.red)
+                      );
+                    }
+
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFFFB7268),  // Warm sunset peach
