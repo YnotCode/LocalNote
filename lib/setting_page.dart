@@ -1,4 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:local_note_2/toggle_notifications.dart'; // Ensure this is the correct path for your toggle notifications page
 
 class SettingsPage extends StatefulWidget {
@@ -9,7 +12,44 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _exclusiveFriends = false; // State variable for toggle
+  bool _exclusiveFriends = false;
+  File? _avatarImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickAndCropImage() async {
+    try {
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        CroppedFile? croppedFile = await ImageCropper().cropImage(
+          sourcePath: pickedFile.path,
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Image',
+              toolbarColor: Colors.blue,
+              toolbarWidgetColor: Colors.white,
+              lockAspectRatio: true,
+            ),
+            IOSUiSettings(
+              title: 'Crop Image',
+              aspectRatioLockEnabled: true,
+            ),
+          ],
+        );
+
+        if (croppedFile != null) {
+          setState(() {
+            _avatarImage = File(croppedFile.path);
+          });
+        }
+      }
+    } catch (e) {
+      // Handle any errors here
+      print('Error picking or cropping image: $e');
+    }
+  }
 
   void _logout() {
     // Implement logout logic here
