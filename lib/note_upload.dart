@@ -41,14 +41,16 @@ class _NoteUploadWidgetState extends State<NoteUploadWidget> {
         children: [
           CupertinoTextField(
             controller: _controller,
-            maxLines: 3,
-            placeholder: 'Write your note here...',
+            maxLines: 14,
+            padding: const EdgeInsets.only(
+              top: 8.0,  // Adjust this for the desired top padding
+              left: 8.0, // Adjust this for the desired left padding
+            ),
             decoration: const BoxDecoration(
-              border: Border(
-                
-              ),
+              border: Border(),
             ),
           ),
+
           const SizedBox(height: 10),
           ElevatedButton(
             onPressed: _handleAddNote,
