@@ -189,11 +189,13 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: () async {
-                    bool x = await verifyPhoneNumber(controller.text, otpController.text);
+                    bool x = await verifyPhoneNumber('+1${controller.text}', otpController.text);
                     if (x){
                       widget.onSuccess(controller.text);
                     }
                     else{
+                      debugPrint(x.toString());
+                      debugPrint(otpController.text);
                       debugPrint("L bozo");
                     }
                     // ScaffoldMessenger.of(context).showSnackBar(
