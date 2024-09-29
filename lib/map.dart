@@ -9,6 +9,42 @@ import 'package:flutter/animation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart' as l;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
+String formatTimestamp(Timestamp timestamp) {
+  // Convert the Firestore Timestamp to a DateTime object
+  DateTime dateTime = timestamp.toDate();
+
+  // Format the DateTime manually
+  String year = dateTime.year.toString();
+  String month = _getMonthName(dateTime.month);  // Convert month number to month name
+  String day = dateTime.day.toString().padLeft(2, '0'); // Add leading zero for single digits
+  String hour = dateTime.hour.toString().padLeft(2, '0');
+  String minute = dateTime.minute.toString().padLeft(2, '0');
+  String second = dateTime.second.toString().padLeft(2, '0');
+  String amPm = dateTime.hour >= 12 ? 'PM' : 'AM';
+
+  // Adjust hour to 12-hour format
+  int hour12 = dateTime.hour % 12;
+  if (hour12 == 0) {
+    hour12 = 12;
+  }
+
+  // Build the final formatted string
+  String formattedDate = '$month $day, $year at $hour12:$minute:$second $amPm';
+  return formattedDate;
+}
+
+String _getMonthName(int monthNumber) {
+  // List of month names
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+
+  // Return the month name based on month number (1-12)
+  return months[monthNumber - 1];
+}
 
 Future<List> getNotesWithinRadius(
   double centerLat,
@@ -90,6 +126,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   l.LatLng _currentCenter = const l.LatLng(51.509364, -0.128929);
   double _currentZoom = 20.0;
   final double _defaultZoom = 20; // Default zoom level when centering
+  bool friendsToggled = false;
 
   AnimationController? _mapAnimationController;
   List<Marker> markers = [];
@@ -100,10 +137,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  @override
-  void initState() {
-    super.initState();
-
+  void _loadNotes() {
     final coll = FirebaseFirestore.instance.collection("notes");
     coll.snapshots().listen((event) async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -176,6 +210,12 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       });
     });
   }
+  @override
+  void initState() {
+    super.initState();
+
+    _loadNotes();
+  }
 
   void _animateMapMovement(l.LatLng destCenter, double destZoom,
       {int duration = 700}) {
@@ -235,7 +275,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
             crs: const Epsg3857(),
             onMapEvent: (MapEvent mapEvent) {
               setState(() {
-                // Update current center and zoom from mapEvent
                 _currentCenter = mapEvent.camera.center;
                 _currentZoom = mapEvent.camera.zoom;
               });
@@ -252,13 +291,27 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
               ),
           ],
         ),
-        // Zoom controls at the bottom left corner
+        // Zoom controls and "friends" button at the bottom right corner
         Positioned(
           bottom: 20,
-          left: 20,
+          right: 20,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // "Friends" button
+              FloatingActionButton(
+                mini: true,
+                heroTag: "friends",
+                child: friendsToggled ? Icon(Icons.group) : Icon(Icons.person),
+                onPressed: () {
+                  setState(() {
+                    friendsToggled = !friendsToggled;
+                  });
+                  // Add functionality for the friends button
+                  debugPrint('Friends button pressed');
+                },
+              ),
+              SizedBox(height: 10),
               FloatingActionButton(
                 mini: true,
                 heroTag: "zoomIn",
@@ -315,6 +368,8 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       ],
     );
   }
+
+
 
   bool closeEnough(double lat1, double lon1, double lat2, double lon2) {
     final double minDistance = 0.001;
@@ -401,97 +456,148 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
           );
           return;
         }
+
+        debugPrint("Tapped on note: $note");
+
+        final timestamp = formatTimestamp(note["timestamp"]);
+        print("TIMESTAMP: $timestamp");
+        final useImage = note.containsKey('image');
+        // var img = note["image"];
+        // if(note.contains('image')) {
+        //   // final httpsReference = FirebaseStorage.instance.refFromURL(note.data()['image']);
+
+        // }
+
+
+        
         showCupertinoModalPopup(
           context: context,
           builder: (context) {
-            return Container(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height * 0.8,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.95),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 20),
-                  // Close Icon Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const SizedBox(width: 10.0),
-                      CupertinoButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Icon(
-                          CupertinoIcons.xmark,
-                          size: 30.0,
-                          color: Colors.black54,
+            return Center(
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9, // Slightly smaller modal width for postcard effect
+                height: MediaQuery.of(context).size.height * 0.7,
+                margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 30.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15.0),
+                  border: Border.all(color: Colors.grey, width: 2), // Postcard-like border
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 8.0,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 20),
+                        // Close Icon Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const SizedBox(width: 10.0),
+                            CupertinoButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Icon(
+                                CupertinoIcons.xmark,
+                                size: 30.0,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            Expanded(child: Container()),
+                          ],
                         ),
-                      ),
-                      Expanded(child: Container()),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  // Profile or Name Section - Centered
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Text(
-                      'from $name',
-                      style: const TextStyle(
-                        fontSize: 22.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        decoration: TextDecoration.none,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  // Note Title Section - Centered
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Text(
-                      note["title"],
-                      style: const TextStyle(
-                        fontSize: 32.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        decoration: TextDecoration.none,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  // Note Body Section - Centered
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Text(
-                      note["note"],
-                      style: const TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.black54,
-                        decoration: TextDecoration.none,
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  const Spacer(),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20.0),
-                    child: Center(
-                      child: Container(
-                        height: 5.0,
-                        width: 50.0,
-                        decoration: BoxDecoration(
-                          color: Colors.black12,
-                          borderRadius: BorderRadius.circular(10.0),
+                        const SizedBox(height: 20),
+                        // Profile or Name Section - Centered
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Text(
+                            'from $name',
+                            style: const TextStyle(
+                              fontSize: 22.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              decoration: TextDecoration.none,
+                              fontFamily: 'Courier', // Postcard style font
+                            ),
+                            textAlign: TextAlign.start,
+                          ),
                         ),
-                      ),
+                        if (useImage) const SizedBox(height: 20),
+                        // Image Section - Full Width
+                        if (useImage)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                            child: Center(
+                              child: ClipRRect(
+                                // borderRadius: BorderRadius.circular(10.0), // Rounded corners for the image
+                                child: Image.network(
+                                  note['image'],
+                                  width: MediaQuery.of(context).size.width * 0.9 - 40, // Adjust the width to fit the modal
+                                  fit: BoxFit.cover, // Make the image cover the width while maintaining the aspect ratio
+                                ),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 20),
+                        // Timestamp Section
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Text(
+                            timestamp,
+                            style: const TextStyle(
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black54,
+                              decoration: TextDecoration.none,
+                              height: 1.4,
+                              fontFamily: 'Courier', // Postcard style font
+                            ),
+                            textAlign: TextAlign.start,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Note Body Section - Centered
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Text(
+                            note["note"],
+                            style: const TextStyle(
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black54,
+                              decoration: TextDecoration.none,
+                              height: 1.4,
+                              fontFamily: 'Courier', // Postcard style font
+                            ),
+                            textAlign: TextAlign.start,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Footer Section
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 20.0),
+                          child: Center(
+                            child: Container(
+                              height: 5.0,
+                              width: 50.0,
+                              decoration: BoxDecoration(
+                                color: Colors.black12,
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             );
           },
