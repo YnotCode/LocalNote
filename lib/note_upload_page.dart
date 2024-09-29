@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart'; // Import image picker
 import 'package:photo_manager/photo_manager.dart'; // Import photo_manager for gallery access
 import 'package:firebase_storage/firebase_storage.dart'; // Import Firebase Storage
 import 'package:image_cropper/image_cropper.dart'; // Import image cropper
+import 'package:permission_handler/permission_handler.dart'; // For handling permissions
 
 class NoteUploadPage extends StatefulWidget {
   const NoteUploadPage({super.key});
@@ -30,9 +31,28 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
     super.initState();
   }
 
+  // Function to request camera permission
+  Future<bool> _requestCameraPermission() async {
+    var status = await Permission.camera.status;
+    if (!status.isGranted) {
+      status = await Permission.camera.request();
+      return status.isGranted;
+    }
+    return true;
+  }
+
   // Function to open the camera
   Future<void> _openCamera() async {
     try {
+      // Request camera permission
+      bool isGranted = await _requestCameraPermission();
+      if (!isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Camera permission is required to take pictures.')),
+        );
+        return;
+      }
+
       final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
 
       if (pickedFile != null) {
@@ -45,6 +65,9 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
       }
     } catch (e) {
       debugPrint("Error opening camera: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error opening camera: $e')),
+      );
     }
   }
 
@@ -63,6 +86,9 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
       }
     } catch (e) {
       debugPrint("Error picking image: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking image: $e')),
+      );
     }
   }
 
@@ -91,6 +117,9 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
       }
     } catch (e) {
       debugPrint("Error cropping image: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error cropping image: $e')),
+      );
       return null;
     }
   }
@@ -148,10 +177,10 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
     }
   }
 
-  // Function to upload image to Firebase Storage (or any other storage service)
+  // Function to upload image to Firebase Storage
   Future<String> _uploadImage(File imageFile, String phoneNumber) async {
     final storageRef = FirebaseStorage.instance.ref();
-    // create a reference with phone and timestamp
+    // Create a reference with phone and timestamp
     final imageRef = storageRef.child('images/$phoneNumber/${DateTime.now().millisecondsSinceEpoch}.jpg');
     await imageRef.putFile(imageFile);
 
@@ -177,7 +206,7 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
         },
         child: SafeArea(
           bottom: false,
-          child: Column( // Replaced with a simple Column for better expanding
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Back button
@@ -235,6 +264,7 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
                   : GestureDetector(
                       onTap: _pickImageFromGallery,
                       child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16.0),
                         height: MediaQuery.of(context).size.height * 0.3,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12.0),
@@ -248,12 +278,11 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
                               fontSize: 16,
                             ),
                           ),
-                  ),
-                ),
-                  ),
-
-                const SizedBox(height: 20),
-                Expanded(
+                        ),
+                      ),
+                    ),
+              const SizedBox(height: 20),
+              Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Container(
@@ -264,9 +293,8 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
                     ),
                     child: CupertinoTextField(
                       controller: noteController,
-                      placeholder: "write here", // Updated placeholder
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 15, horizontal: 10),
+                      placeholder: "Write here", // Updated placeholder
+                      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black,
@@ -282,49 +310,46 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
                   ),
                 ),
               ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: CupertinoButton(
-                    onPressed: _saveNote,
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    color: const Color(0xFFC9794E), // Warm sunset peach
-                    child: const Text(
-                      "Save Note",
-                      style: TextStyle(
-                        color: Color(0xFFFFFFFF),
-                        fontSize: 16,
-                      ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: CupertinoButton(
+                  onPressed: _saveNote,
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  color: const Color(0xFFC9794E), // Warm sunset peach
+                  child: const Text(
+                    "Save Note",
+                    style: TextStyle(
+                      color: Color(0xFFFFFFFF),
+                      fontSize: 16,
                     ),
                   ),
-                  )
-                  
                 ),
-
-                const SizedBox(height: 20),
-                // Floating Action Button for Camera (closer to the bottom)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 30.0), // Closer to the bottom
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: SizedBox(
-                      width: 70, // Slightly smaller button
-                      height: 70,
-                      child: FloatingActionButton(
-                        onPressed: _openCamera,
-                        child: const Icon(
-                          Icons.camera_alt,
-                          size: 35,
-                          color: Colors.white,
-                        ),
-                        backgroundColor: const Color.fromARGB(255, 77, 40, 24),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(35),
-                        ),
+              ),
+              const SizedBox(height: 20),
+              // Floating Action Button for Camera (closer to the bottom)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 30.0), // Closer to the bottom
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: SizedBox(
+                    width: 70, // Slightly smaller button
+                    height: 70,
+                    child: FloatingActionButton(
+                      onPressed: _openCamera,
+                      child: const Icon(
+                        Icons.camera_alt,
+                        size: 35,
+                        color: Colors.white,
+                      ),
+                      backgroundColor: const Color.fromARGB(255, 77, 40, 24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(35),
                       ),
                     ),
                   ),
                 ),
+              ),
             ],
           ),
         ),
