@@ -146,170 +146,158 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
     double imageHeight = MediaQuery.of(context).size.height * 0.3;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8E7), // Light sunset background
+      backgroundColor: Colors.white,
       body: GestureDetector(
         behavior: HitTestBehavior.translucent, // Allow tap outside to dismiss keyboard
+        // Dismiss the keyboard when tapping outside
         onTap: () {
-          FocusScope.of(context).unfocus(); // Dismiss the keyboard when tapping outside
+          FocusScope.of(context).unfocus();
         },
         child: SafeArea(
           bottom: false,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-
-                // Back Button (closer to the left side)
-                Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 0), // Reduced left padding
-                      child: CupertinoButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Icon(
-                          CupertinoIcons.chevron_back,
-                          size: 40.0,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Display Image Placeholder or selected image
-                GestureDetector(
-                  onTap: _pickImageFromGallery,
-                  child: Container(
-                    height: imageHeight,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12.0), // Rounded corners
-                      color: Colors.grey.shade200, // Placeholder background color
-                    ),
-                    child: _image != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12.0),
-                            child: Image.file(
-                              _image!,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.topCenter, // Align top of the image
+          child: LayoutBuilder( // Use LayoutBuilder to adjust based on screen size
+            builder: (context, constraints) {
+              return SingleChildScrollView( // Enable scrolling to prevent overflow
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Back button
+                        Row(
+                          children: [
+                            const SizedBox(width: 5),
+                            CupertinoButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Icon(CupertinoIcons.chevron_back,
+                                  size: 40.0, color: Colors.black),
                             ),
-                          )
-                        : Center(
-                            child: Text(
-                              'Tap to select an image',
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 16,
+                            Expanded(child: Container()),
+                          ],
+                        ),
+                        // Display the captured image if available
+                        GestureDetector(
+                          onTap: _pickImageFromGallery,
+                          child: Container(
+                            height: imageHeight,
+                            width: MediaQuery.of(context).size.width * 0.8, // 80% of the screen width
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12.0), // Rounded corners
+                              color: Colors.grey.shade200, // Placeholder background color
+                            ),
+                            child: _image != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    child: Image.file(
+                                      _image!,
+                                      fit: BoxFit.cover,
+                                      alignment: Alignment.topCenter, // Align top of the image
+                                    ),
+                                  )
+                                : Center(
+                                    child: Text(
+                                      'Tap to select an image',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        // Title input
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: CupertinoTextField(
+                            controller: titleController,
+                            placeholder: "Title",
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 15, horizontal: 10),
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            placeholderStyle: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w300,
+                              color: Colors.grey,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        // Note input widget
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: CupertinoTextField(
+                            controller: noteController,
+                            placeholder: "Note",
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 15, horizontal: 10),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                            placeholderStyle: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                            maxLines: null, // Allow multiple lines
+                            expands: true, // Allow the text field to expand vertically
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey.shade300),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                          ),
+                        ),
+                        // Save Button
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 10),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: CupertinoButton.filled(
+                              onPressed: _saveNote,
+                              child: const Text('Save Note'),
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 20.0),
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: SizedBox(
+                              width: 70, // Slightly smaller button
+                              height: 70,
+                              child: FloatingActionButton(
+                                onPressed: _openCamera,
+                                child: const Icon(Icons.camera_alt,
+                                    size: 35, color: Colors.white), // Adjusted icon size
+                                backgroundColor: Colors.black,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(35),
+                                ),
                               ),
                             ),
                           ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Title Input
-                CupertinoTextField(
-                  cursorColor: const Color.fromARGB(222, 57, 32, 15),
-                  controller: titleController,
-                  placeholder: "Title",
-                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                  placeholderStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w300,
-                    color: Colors.grey,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12.0),
-                    color: const Color.fromARGB(92, 255, 246, 235),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Note Input Field
-                CupertinoTextField(
-                                    cursorColor: const Color.fromARGB(222, 57, 32, 15),
-
-                  controller: noteController,
-                  placeholder: "Note",
-                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
-                  placeholderStyle: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                  maxLines: null, // Allow multiple lines
-                  expands: true, // Allow the text field to expand vertically
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12.0),
-                    color: const Color.fromARGB(92, 255, 246, 235),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Save Note Button (with updated color to match the login page)
-                SizedBox(
-                  width: double.infinity,
-                  child: CupertinoButton(
-                    onPressed: _saveNote,
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    color: const Color(0xFFC9794E), // Warm sunset peach
-                    child: const Text(
-                      "Save Note",
-                      style: TextStyle(
-                        color: Color(0xFFFFFFFF),
-                        fontSize: 16,
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 40), // Add spacing to move the camera icon lower
-
-                // Floating Action Button for Camera (closer to the bottom)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 30.0), // Closer to the bottom
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: SizedBox(
-                      width: 70, // Slightly smaller button
-                      height: 70,
-                      child: FloatingActionButton(
-                        onPressed: _openCamera,
-                        child: const Icon(
-                          Icons.camera_alt,
-                          size: 35,
-                          color: Colors.white,
-                        ),
-                        backgroundColor: const Color.fromARGB(255, 77, 40, 24),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(35),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
