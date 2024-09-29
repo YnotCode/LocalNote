@@ -326,7 +326,7 @@ Widget build(BuildContext context) {
             FloatingActionButton(
               mini: true,
               heroTag: "friends",
-              child: friendsToggled ? Icon(Icons.group) : Icon(Icons.person),
+              child: friendsToggled ? Icon(Icons.person): Icon(Icons.group),
               onPressed: () {
                   setState(() {
                     friendsToggled = !friendsToggled;

@@ -98,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 SizedBox(height: 48),
                 Image.asset('assets/logo.jpg', width: 120, height: 120),
-                Text('Noteify', style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
+                Text('Noteified', style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
                 SizedBox(height: 48),
                 // Text("Welcome Back!",
                 //     style: TextStyle(
