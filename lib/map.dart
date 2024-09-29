@@ -138,7 +138,27 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   }
 
   void _loadNotes() {
-    final coll = FirebaseFirestore.instance.collection("notes");
+    var friends = [];
+    SharedPreferences.getInstance().then((prefs) {
+      final ph = prefs.getString("phone-number");
+      FirebaseFirestore.instance
+          .collection("users")
+          .where("phoneNumber", isEqualTo: ph)
+          .get()
+          .then((value) {
+        if (value.docs.isNotEmpty) {
+          final all_info = value.docs[0].data()["friends"];
+          for (int i = 0; i < all_info.length; ++i) {
+            friends.add(all_info[i]['phoneNumber']);
+          }
+          debugPrint("FRIENDS: $friends");
+        }
+      });
+    });
+
+    final coll = FirebaseFirestore.instance.collection("notes"); // friendsToggled ? FirebaseFirestore.instance.collection("notes").where("creator", whereIn: friends) :
+    
+    debugPrint("COLLECTION: ${coll.get()}");
     coll.snapshots().listen((event) async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String ph = prefs.getString("phone-number") ?? "";
@@ -146,6 +166,11 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       for (int i = 0; i < event.docChanges.length; ++i) {
         try {
           final n = event.docChanges[i].doc.data() ?? {};
+          
+          if (friendsToggled && !(friends.contains(n["creator"]))) {
+            continue;
+          }
+
           double clat = n["location"].latitude;
           double clon = n["location"].longitude;
           String name = "Unknown";
@@ -306,7 +331,10 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                 onPressed: () {
                   setState(() {
                     friendsToggled = !friendsToggled;
+                    markers = [];
                   });
+
+                  _loadNotes();
                   // Add functionality for the friends button
                   debugPrint('Friends button pressed');
                 },
@@ -401,9 +429,27 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? ph = prefs.getString("phone-number");
+      var friends = [];
+      await FirebaseFirestore.instance
+          .collection("users")
+          .where("phoneNumber", isEqualTo: ph)
+          .get()
+          .then((value) {
+        if (value.docs.isNotEmpty) {
+          final all_info = value.docs[0].data()["friends"];
+          for (int i = 0; i < all_info.length; ++i) {
+            friends.add(all_info[i]['phoneNumber']);
+          }
+          debugPrint("FRIENDS: $friends");
+        }
+      });
 
       for (final note in notes) {
         try {
+          if(friendsToggled && !(friends.contains(note["creator"]))) {
+            continue;
+          }
+
           debugPrint("Here!!");
           debugPrint("${note["location"].latitude} ${note["location"].longitude}");
           double clat = note["location"].latitude;
