@@ -264,14 +264,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
               MarkerLayer(
                 markers: markers,
               ),
-            RichAttributionWidget(
-              attributions: [
-                TextSourceAttribution(
-                  'OpenStreetMap contributors',
-                  onTap: () => debugPrint("Attribution tapped!"),
-                ),
-              ],
-            ),
           ],
         ),
         // Zoom controls at the bottom left corner
