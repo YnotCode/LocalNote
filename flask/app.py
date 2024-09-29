@@ -1,13 +1,13 @@
 from flask import Flask
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, firestore, messaging
 import threading
 import time
 
 app = Flask(__name__)
 
 # Initialize Firebase Admin SDK
-cred = credentials.Certificate("./serviceAccountKey.json")  # Path to your service account key
+cred = credentials.Certificate("./local-note-ac0e7-firebase-adminsdk-n5sit-c580008cbb.json")  # Path to your service account key
 firebase_admin.initialize_app(cred)
 
 # Initialize Firestore client
@@ -24,8 +24,18 @@ def query_firestore():
 # Function to query Firestore every 5 seconds
 def periodic_firestore_query():
     while True:
-        query_firestore()
-        time.sleep(5)
+        print("Finna send a message")
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title="Notification Title",
+                body="Notification Body"
+            ),
+            topic="all"
+        )
+
+        # Send the message
+        response = messaging.send(message)
+        time.sleep(30)
 
 # Flask route for the homepage
 @app.route('/')

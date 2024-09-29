@@ -60,4 +60,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'local-note-ac0e7.appspot.com',
     iosBundleId: 'com.example.localNote2',
   );
+
 }

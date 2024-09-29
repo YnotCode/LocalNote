@@ -18,12 +18,67 @@ import 'note_upload.dart';
 import 'friends.dart';
 import 'setting_page.dart';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+import 'package:rxdart/rxdart.dart';
+
+final _messageStreamController = BehaviorSubject<RemoteMessage>();
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // If you're going to use other Firebase services in the background, such as Firestore,
+  // make sure you call `initializeApp` before using other Firebase services.
+  debugPrint("Handling background message!!");
+  await Firebase.initializeApp();
+
+  //print("Handling a background message: ${message.messageId}");
+}
+
 void main() async {
-  //SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({"logged-in": "true", "phone-number": "+17343238630", "name": "Tony"});
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+    options: DefaultFirebaseOptions.currentPlatform,
   );
+
+ // TODO: Request permission
+ final messaging = FirebaseMessaging.instance;
+
+ // TODO: Register with FCM
+ // TODO: Set up foreground message handler
+ // TODO: Set up background message handler
+
+
+  // Web/iOS app users need to grant permission to receive messages
+  final settings = await messaging.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
+  
+  
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    debugPrint('Handling a foreground message: ${message.messageId}');
+    debugPrint('Message data: ${message.data}');
+    debugPrint('Message notification: ${message.notification?.title}');
+    debugPrint('Message notification: ${message.notification?.body}');
+
+    _messageStreamController.sink.add(message);
+  });
+
+  // TODO: Set up background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  debugPrint('Permission granted: ${settings.authorizationStatus}');
+
+  const topic = 'all';
+  await messaging.subscribeToTopic(topic);
 
   runApp(const MainApp());
 }
@@ -51,10 +106,10 @@ class _MainAppState extends State<MainApp> {
 
     location.enableBackgroundMode(enable: true);
 
-    
-    // TODO: implement initState
     SharedPreferences.getInstance().then((prefs){
       String? x = prefs.getString("logged-in");
+      String? y = prefs.getString("name");
+
       debugPrint("HELLO!!");
       if (x == null){
         setState(() {
@@ -64,6 +119,17 @@ class _MainAppState extends State<MainApp> {
       else if (x == "true"){
         setState(() {
           userIsLoggedIn = true;
+        });
+      }
+
+      if (y == null){
+        setState(() {
+          exists = false;
+        });
+      }
+      else{
+        setState(() {
+          exists = true;
         });
       }
     });

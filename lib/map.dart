@@ -208,6 +208,21 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
         );
       });
     });
+
+    if (_currentPosition != null) {
+                final destCenter = l.LatLng(
+                  _currentPosition!.latitude,
+                  _currentPosition!.longitude,
+                );
+                setState(() {
+                  _animateMapMovement(destCenter, _defaultZoom);
+                  _currentCenter = destCenter;
+                  _currentZoom = _defaultZoom;
+                });
+              } else {
+                // Optionally handle the case when the current position is not available
+                debugPrint('Current position not available');
+              }
   }
 
   void _animateMapMovement(l.LatLng destCenter, double destZoom, {int duration = 700}) {
@@ -495,6 +510,21 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
       setState(() {
         _currentPosition = position;
+
+        if (_currentPosition != null) {
+        final destCenter = l.LatLng(
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+        );
+        setState(() {
+          _animateMapMovement(destCenter, _defaultZoom);
+          _currentCenter = destCenter;
+          _currentZoom = _defaultZoom;
+        });
+      } else {
+        // Optionally handle the case when the current position is not available
+        debugPrint('Current position not available');
+      }
         //_animateMapMovement(destCenter, destZoom);
         _currentCenter = destCenter;
         _currentZoom = destZoom;
