@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -129,7 +131,56 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
   @override
   void initState() {
+
     super.initState();
+
+    final coll = FirebaseFirestore.instance.collection("notes");
+    coll.snapshots().listen((event) async {
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      String ph = prefs.getString("phone-number") ?? "";
+      
+      for (int i = 0; i < event.docChanges.length; ++i){
+
+        try{
+          final n = event.docChanges[i].doc.data() ?? {};
+
+          double clat = n["location"].latitude;
+          double clon = n["location"].longitude;
+          String name = "Unknown";
+
+          if (closeEnough(clat, clon, _currentPosition?.latitude ?? 0, _currentPosition?.longitude ?? 0)){
+            debugPrint("CLOSE: ${n["creator"]}");
+            final d = await FirebaseFirestore.instance.collection("users").where("phoneNumber", isEqualTo: n["creator"]).get();
+            if (d.docs.isNotEmpty){
+              debugPrint("GG");
+              name = d.docs[0].get("name");
+            }
+          }
+
+          setState(() {
+            markers = markers..insert(0,
+              Marker(
+                point: l.LatLng(
+                  n?["location"].latitude,
+                  n?["location"].longitude,
+                ),
+                width: 40.0,
+                height: 40.0,
+                child: _notePopup(n?["location"].latitude,
+                  n?["location"].longitude, _currentPosition!, name, n, ph),
+              ),
+              
+            );
+          });
+        }
+        catch(e){
+          debugPrint("Failed to listen to note: $e");
+        }
+        
+      }
+    });
 
     _checkLocationPermission().then((_) {
       debugPrint("LOCATION STATUS: $_locationStatus");
@@ -342,6 +393,13 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
         desiredAccuracy: LocationAccuracy.high,
       );
 
+      // StreamSubscription<Position> positionStream = Geolocator.getPositionStream(locationSettings: LocationSettings(accuracy: LocationAccuracy.best, distanceFilter: 1)).listen(
+      //     (Position? position) {
+      //       String update = position == null ? 'Unknown' : '${position.latitude.toString()}, ${position.longitude.toString()}}';
+      //       debugPrint("Received update: $update");
+      //     }
+      // );
+
       final destCenter = l.LatLng(position.latitude, position.longitude);
       final destZoom = _defaultZoom;
 
@@ -386,71 +444,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                 ),
                 width: 40.0,
                 height: 40.0,
-                child: CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  minSize: 0.0,
-                  onPressed: (){
-                    if (!closeEnough(clat, clon, position.latitude, position.longitude)){
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(
-                          "Too far away"
-                        ))
-                      );
-                      return;
-                    }
-                    showCupertinoModalPopup(context: context, builder: (context){
-                      return Container(
-                        width: MediaQuery.of(context).size.width,
-                        height: MediaQuery.of(context).size.height * 0.8,
-                        color: Colors.white.withOpacity(0.8),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 10),
-                            Row(
-                              children: [
-                                const SizedBox(width: 10.0),
-                                CupertinoButton(
-                                  onPressed: ()=>Navigator.pop(context),
-                                  child: Icon(CupertinoIcons.xmark)
-                                ),
-                                Expanded(child: Container())
-                              ],
-                            ),
-                            Expanded(child: Container(),),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Text(name, style: const TextStyle(fontSize: 25.0, fontWeight: FontWeight.normal, color: Colors.black, decoration: TextDecoration.none)),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 50),
-                            Text(note["title"], style: const TextStyle(fontSize: 40.0, fontWeight: FontWeight.bold, color: Colors.black, decoration: TextDecoration.none)),
-                            const SizedBox(height: 10),
-                            Text(note["note"], style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.w500, color: Colors.black, decoration: TextDecoration.none)),
-                            Expanded(child: Container(),),
-                            Expanded(child: Container(),)
-                          ]
-                        )
-                      );
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: note["creator"] == ph ? Colors.blue.withOpacity(0.8)  : Colors.purple.withOpacity(0.7),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.edit_document,
-                        color: Colors.white,
-                        size: 20.0,
-                      ),
-                    ),
-                  ),
-                ),
+                child: _notePopup(clat, clon, position, name, note, ph),
               ),
             );
           });
@@ -465,6 +459,74 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
         _locationStatus = 'Error getting location: $e';
       });
     }
+  }
+
+  CupertinoButton _notePopup(double clat, double clon, Position position, String name, note, String? ph) {
+    return CupertinoButton(
+                padding: EdgeInsets.zero,
+                minSize: 0.0,
+                onPressed: (){
+                  if (!closeEnough(clat, clon, position.latitude, position.longitude)){
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(
+                        "Too far away"
+                      ))
+                    );
+                    return;
+                  }
+                  showCupertinoModalPopup(context: context, builder: (context){
+                    return Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height * 0.8,
+                      color: Colors.white.withOpacity(0.8),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              const SizedBox(width: 10.0),
+                              CupertinoButton(
+                                onPressed: ()=>Navigator.pop(context),
+                                child: Icon(CupertinoIcons.xmark)
+                              ),
+                              Expanded(child: Container())
+                            ],
+                          ),
+                          Expanded(child: Container(),),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(name, style: const TextStyle(fontSize: 25.0, fontWeight: FontWeight.normal, color: Colors.black, decoration: TextDecoration.none)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 50),
+                          Text(note["title"], style: const TextStyle(fontSize: 40.0, fontWeight: FontWeight.bold, color: Colors.black, decoration: TextDecoration.none)),
+                          const SizedBox(height: 10),
+                          Text(note["note"], style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.w500, color: Colors.black, decoration: TextDecoration.none)),
+                          Expanded(child: Container(),),
+                          Expanded(child: Container(),)
+                        ]
+                      )
+                    );
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: note["creator"] == ph ? Colors.blue.withOpacity(0.8)  : Colors.purple.withOpacity(0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.edit_document,
+                      color: Colors.white,
+                      size: 20.0,
+                    ),
+                  ),
+                ),
+              );
   }
 
   Future<void> _checkLocationPermission() async {

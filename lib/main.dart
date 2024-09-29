@@ -12,6 +12,7 @@ import 'package:local_note_2/map.dart';
 // import 'package:local_note_2/map.dart';
 import 'package:local_note_2/note_upload_page.dart';
 import 'package:local_note_2/setting_page.dart';
+import 'package:location/location.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'note_upload.dart';
 import 'friends.dart';
@@ -23,6 +24,7 @@ void main() async {
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
   );
+
   runApp(const MainApp());
 }
 
@@ -39,6 +41,16 @@ class _MainAppState extends State<MainApp> {
 
   @override 
   void initState() {
+
+
+    Location location = Location();
+
+    location.onLocationChanged.listen((LocationData currentLocation) {
+      debugPrint("NEW POS: ${currentLocation.latitude} ${currentLocation.longitude}");
+    });
+
+    location.enableBackgroundMode(enable: true);
+
     
     // TODO: implement initState
     SharedPreferences.getInstance().then((prefs){

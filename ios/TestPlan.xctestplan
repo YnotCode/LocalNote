@@ -1,0 +1,22 @@
+{
+  "configurations" : [
+    {
+      "id" : "B53099DE-12A3-41D5-8B2F-CE3F152CB2ED",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "locationScenario" : {
+      "identifier" : "Honolulu, HI, USA",
+      "referenceType" : "built-in"
+    },
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+
+  ],
+  "version" : 1
+}
