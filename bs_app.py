@@ -3,6 +3,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore, messaging
 import threading
 import time
+import subprocess
 
 app = Flask(__name__)
 
@@ -42,12 +43,12 @@ if __name__ == '__main__':
     # Start periodic Firestore querying in a separate thread
     # start_periodic_task()
 
-    subprocess.run(["xcrun", "simctl", "push", "booted", "com.mhacks.localnote2", "pushes/pushes1.json"]) 
+    # subprocess.run(["xcrun", "simctl", "push", "booted", "com.mhacks.localNote2", "pushes/pushes1.json"]) 
 
-    # def listener(event):
-    #     subprocess.run(["xcrun", "simctl", "push", "booted", "com.mhacks.localnote2", "pushes/pushes1.json"]) 
+    def listener(col_snapshot, changes, read_time):
+        subprocess.run(["xcrun", "simctl", "push", "booted", "com.mhacks.localNote2", "pushes/pushes1.json"]) 
 
-    # firebase_admin.db.reference('notes').listen(listener)
+    db.collection('notes').on_snapshot(listener)
 
 
     # Run the Flask app

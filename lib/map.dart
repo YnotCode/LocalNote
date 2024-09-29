@@ -158,7 +158,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
     final coll = FirebaseFirestore.instance.collection("notes"); // friendsToggled ? FirebaseFirestore.instance.collection("notes").where("creator", whereIn: friends) :
     
-    debugPrint("COLLECTION: ${coll.get()}");
     coll.snapshots().listen((event) async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String ph = prefs.getString("phone-number") ?? "";
@@ -335,6 +334,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                   });
 
                   _loadNotes();
+                  });
                   // Add functionality for the friends button
                   debugPrint('Friends button pressed');
                 },
