@@ -961,15 +961,21 @@ PODS:
   - Firebase/Firestore (10.22.0):
     - Firebase/CoreOnly
     - FirebaseFirestore (~> 10.22.0)
+<<<<<<< HEAD
   - Firebase/Messaging (10.22.0):
     - Firebase/CoreOnly
     - FirebaseMessaging (~> 10.22.0)
   - Firebase/Storage (10.22.0):
     - Firebase/CoreOnly
+=======
+  - Firebase/Storage (10.22.0):
+    - Firebase/CoreOnly
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
     - FirebaseStorage (~> 10.22.0)
   - firebase_core (3.6.0):
     - Firebase/CoreOnly (= 10.22.0)
     - Flutter
+<<<<<<< HEAD
   - firebase_messaging (15.1.3):
     - Firebase/Messaging (= 10.22.0)
     - firebase_core
@@ -978,6 +984,12 @@ PODS:
     - Firebase/Storage (= 10.22.0)
     - firebase_core
     - Flutter
+=======
+  - firebase_storage (12.3.2):
+    - Firebase/Storage (= 10.22.0)
+    - firebase_core
+    - Flutter
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
   - FirebaseAppCheckInterop (10.29.0)
   - FirebaseAuthInterop (10.29.0)
   - FirebaseCore (10.22.0):
@@ -1008,6 +1020,7 @@ PODS:
     - gRPC-Core (~> 1.62.0)
     - leveldb-library (~> 1.22)
     - nanopb (< 2.30911.0, >= 2.30908.0)
+<<<<<<< HEAD
   - FirebaseInstallations (10.29.0):
     - FirebaseCore (~> 10.0)
     - GoogleUtilities/Environment (~> 7.8)
@@ -1022,6 +1035,8 @@ PODS:
     - GoogleUtilities/Reachability (~> 7.8)
     - GoogleUtilities/UserDefaults (~> 7.8)
     - nanopb (< 2.30911.0, >= 2.30908.0)
+=======
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
   - FirebaseSharedSwift (10.29.0)
   - FirebaseStorage (10.22.0):
     - FirebaseAppCheckInterop (~> 10.0)
@@ -1038,15 +1053,19 @@ PODS:
     - Flutter
     - Google-Maps-iOS-Utils (< 7.0, >= 5.0)
     - GoogleMaps (< 10.0, >= 8.4)
+<<<<<<< HEAD
   - GoogleDataTransport (9.4.1):
     - GoogleUtilities/Environment (~> 7.7)
     - nanopb (< 2.30911.0, >= 2.30908.0)
     - PromisesObjC (< 3.0, >= 1.2)
+=======
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
   - GoogleMaps (8.4.0):
     - GoogleMaps/Maps (= 8.4.0)
   - GoogleMaps/Base (8.4.0)
   - GoogleMaps/Maps (8.4.0):
     - GoogleMaps/Base
+<<<<<<< HEAD
   - GoogleUtilities/AppDelegateSwizzler (7.13.3):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
@@ -1054,10 +1073,15 @@ PODS:
     - GoogleUtilities/Privacy
   - GoogleUtilities/Environment (7.13.3):
     - GoogleUtilities/Privacy
+=======
+  - GoogleUtilities/Environment (7.13.3):
+    - GoogleUtilities/Privacy
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
     - PromisesObjC (< 3.0, >= 1.2)
   - GoogleUtilities/Logger (7.13.3):
     - GoogleUtilities/Environment
     - GoogleUtilities/Privacy
+<<<<<<< HEAD
   - GoogleUtilities/Network (7.13.3):
     - GoogleUtilities/Logger
     - "GoogleUtilities/NSData+zlib"
@@ -1072,6 +1096,11 @@ PODS:
   - GoogleUtilities/UserDefaults (7.13.3):
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
+=======
+  - "GoogleUtilities/NSData+zlib (7.13.3)":
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (7.13.3)
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
   - "gRPC-C++ (1.62.5)":
     - "gRPC-C++/Implementation (= 1.62.5)"
     - "gRPC-C++/Interface (= 1.62.5)"
@@ -1182,7 +1211,10 @@ PODS:
 DEPENDENCIES:
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
+<<<<<<< HEAD
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
+=======
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
   - firebase_storage (from `.symlinks/plugins/firebase_storage/ios`)
   - Flutter (from `Flutter`)
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/ios`)
@@ -1207,12 +1239,9 @@ SPEC REPOS:
     - FirebaseCoreInternal
     - FirebaseFirestore
     - FirebaseFirestoreInternal
-    - FirebaseInstallations
-    - FirebaseMessaging
     - FirebaseSharedSwift
     - FirebaseStorage
     - Google-Maps-iOS-Utils
-    - GoogleDataTransport
     - GoogleMaps
     - GoogleUtilities
     - "gRPC-C++"
@@ -1228,8 +1257,11 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/cloud_firestore/ios"
   firebase_core:
     :path: ".symlinks/plugins/firebase_core/ios"
+<<<<<<< HEAD
   firebase_messaging:
     :path: ".symlinks/plugins/firebase_messaging/ios"
+=======
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
   firebase_storage:
     :path: ".symlinks/plugins/firebase_storage/ios"
   Flutter:
@@ -1259,7 +1291,10 @@ SPEC CHECKSUMS:
   cloud_firestore: 86a7c720cc738b8a30d8600bbc1ad90cc4b4f2af
   Firebase: 797fd7297b7e1be954432743a0b3f90038e45a71
   firebase_core: 6bdba575642bdbe2518f6fc8f531f176e989cc5c
+<<<<<<< HEAD
   firebase_messaging: 23f55cd7099d2a7377ec6fdc80abe7383864662a
+=======
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
   firebase_storage: bf2752a0ce7eeb52e20cf8467e4ae0420806839b
   FirebaseAppCheckInterop: 6a1757cfd4067d8e00fccd14fcc1b8fd78cfac07
   FirebaseAuthInterop: 17db81e9b198afb0f95ce48c133825727eed55d3
@@ -1268,15 +1303,21 @@ SPEC CHECKSUMS:
   FirebaseCoreInternal: df84dd300b561c27d5571684f389bf60b0a5c934
   FirebaseFirestore: 16cb8a85fc29da272deaed22a101e24703251da9
   FirebaseFirestoreInternal: f43d25cc04835ec3aa1885f4fc946a1a4f9e1c56
+<<<<<<< HEAD
   FirebaseInstallations: 913cf60d0400ebd5d6b63a28b290372ab44590dd
   FirebaseMessaging: 9f71037fd9db3376a4caa54e5a3949d1027b4b6e
+=======
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
   FirebaseSharedSwift: 20530f495084b8d840f78a100d8c5ee613375f6e
   FirebaseStorage: bc7bddc743548a89cfb896843a77cf4bdde2c231
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   geolocator_apple: 6cbaf322953988e009e5ecb481f07efece75c450
   Google-Maps-iOS-Utils: 66d6de12be1ce6d3742a54661e7a79cb317a9321
   google_maps_flutter_ios: e31555a04d1986ab130f2b9f24b6cdc861acc6d3
+<<<<<<< HEAD
   GoogleDataTransport: 6c09b596d841063d76d4288cc2d2f42cc36e1e2a
+=======
+>>>>>>> 9c85c422366f00c7ac283433c89df7ed463e86d9
   GoogleMaps: 8939898920281c649150e0af74aa291c60f2e77d
   GoogleUtilities: ea963c370a38a8069cc5f7ba4ca849a60b6d7d15
   "gRPC-C++": e725ef63c4475d7cdb7e2cf16eb0fde84bd9ee51

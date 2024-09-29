@@ -198,11 +198,12 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF8E7), // Light sunset background
+      
+      backgroundColor: const Color(0xFFFFF8E7),
       body: GestureDetector(
-        behavior: HitTestBehavior.translucent, // Allow tap outside to dismiss keyboard
+        behavior: HitTestBehavior.translucent,
         onTap: () {
-          FocusScope.of(context).unfocus(); // Dismiss the keyboard when tapping outside
+          FocusScope.of(context).unfocus();
         },
         child: SafeArea(
           bottom: false,
@@ -217,134 +218,149 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: const Icon(CupertinoIcons.chevron_back,
-                        size: 40.0, color: Colors.black),
+                    child: const Icon(CupertinoIcons.chevron_back, size: 40.0, color: Colors.black),
                   ),
                   Expanded(child: Container()),
                 ],
               ),
               const SizedBox(height: 10),
-              // Display the selected image or placeholder
-              _image != null && _imageAspectRatio != null
-                  ? Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.topCenter,
-                      children: [
-                        FractionallySizedBox(
-                          widthFactor: 0.8,
-                          child: AspectRatio(
-                            aspectRatio: _imageAspectRatio!,
-                            child: ClipRRect(
+              // Display the selected image or placeholder inside a box with padding
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12.0),
+                    color: Colors.grey.shade100,
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: _image != null && _imageAspectRatio != null
+                      ? Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.topCenter,
+                          children: [
+                            FractionallySizedBox(
+                              widthFactor: 0.8, // Image width with padding inside the box
+                              child: AspectRatio(
+                                aspectRatio: _imageAspectRatio!,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  child: Image.file(
+                                    _image!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: -10,
+                              right: -10,
+                              child: GestureDetector(
+                                onTap: _removeImage,
+                                child: CircleAvatar(
+                                  radius: 15,
+                                  backgroundColor: Colors.black.withOpacity(0.6),
+                                  child: const Icon(Icons.close, size: 18, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : GestureDetector(
+                          onTap: _pickImageFromGallery,
+                          child: Container(
+                            height: MediaQuery.of(context).size.height * 0.2, // Placeholder height
+                            decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12.0),
-                              child: Image.file(
-                                _image!,
-                                fit: BoxFit.contain,
+                              color: Colors.grey.shade200,
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Tap to select an image',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 16,
+                                  fontFamily: 'courier',
+                                ),
                               ),
                             ),
                           ),
                         ),
-                        Positioned(
-                          top: -10,
-                          right: 32,
-                          child: GestureDetector(
-                            onTap: _removeImage,
-                            child: CircleAvatar(
-                              radius: 15,
-                              backgroundColor: Colors.black.withOpacity(0.6),
-                              child: const Icon(
-                                Icons.close,
-                                size: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : GestureDetector(
-                      onTap: _pickImageFromGallery,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                        height: MediaQuery.of(context).size.height * 0.3,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12.0),
-                          color: Colors.grey.shade200,
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Tap to select an image',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                ),
+              ),
               const SizedBox(height: 20),
+              // Note input area with "write here" placeholder aligned top-left
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.yellow[100], // Light yellow background for the note box
+                      color: const Color.fromARGB(255, 252, 252, 244),
                       borderRadius: BorderRadius.circular(12.0),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: CupertinoTextField(
+                      cursorColor:  Color.fromARGB(255, 77, 40, 24),
                       controller: noteController,
-                      placeholder: "Write here", // Updated placeholder
-                      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                      placeholder: "write here",
+                      padding: const EdgeInsets.fromLTRB(10, 15, 10, 15), // Left-aligned with higher starting point
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black,
+                        fontFamily: 'Courier', // Monospace typewriter font
                       ),
                       placeholderStyle: const TextStyle(
                         fontSize: 16,
                         color: Colors.grey,
+                        fontFamily: 'Courier', // Typewriter-style placeholder
                       ),
-                      maxLines: null, // Allow multiple lines
-                      expands: true, // Allow the text field to expand vertically
-                      decoration: const BoxDecoration(), // No default Cupertino decoration
+                      maxLines: null,
+                      expands: true,
+                      textAlignVertical: TextAlignVertical.top, // Align text to the top
+                      decoration: const BoxDecoration(),
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
+              // Save Note button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: CupertinoButton(
                   onPressed: _saveNote,
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  color: const Color(0xFFC9794E), // Warm sunset peach
+                  padding: const EdgeInsets.symmetric(vertical: 12.0), // Smaller button padding
+                  color: const Color.fromARGB(255, 112, 73, 52),
                   child: const Text(
                     "Save Note",
                     style: TextStyle(
-                      color: Color(0xFFFFFFFF),
-                      fontSize: 16,
+                      color: Colors.white,
+                      fontSize: 14, // Smaller font size
+                      fontFamily: 'Courier', // Monospace typewriter font
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
-              // Floating Action Button for Camera (closer to the bottom)
+              // Floating Action Button for Camera
               Padding(
-                padding: const EdgeInsets.only(bottom: 30.0), // Closer to the bottom
+                padding: const EdgeInsets.only(bottom: 30.0),
                 child: Align(
                   alignment: Alignment.bottomCenter,
                   child: SizedBox(
-                    width: 70, // Slightly smaller button
-                    height: 70,
+                    width: 60, // Smaller camera button
+                    height: 60,
                     child: FloatingActionButton(
-                      onPressed: _openCamera,
+                      onPressed: () {
+                        // Open camera logic
+                      },
                       child: const Icon(
                         Icons.camera_alt,
-                        size: 35,
+                        size: 30,
                         color: Colors.white,
                       ),
                       backgroundColor: const Color.fromARGB(255, 77, 40, 24),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(35),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                     ),
                   ),

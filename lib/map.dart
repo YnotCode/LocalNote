@@ -326,7 +326,7 @@ Widget build(BuildContext context) {
             FloatingActionButton(
               mini: true,
               heroTag: "friends",
-              child: friendsToggled ? Icon(Icons.group) : Icon(Icons.person),
+              child: friendsToggled ? Icon(Icons.person): Icon(Icons.group),
               onPressed: () {
                   setState(() {
                     friendsToggled = !friendsToggled;
@@ -712,6 +712,9 @@ Widget build(BuildContext context) {
     }
 
     // If permission is granted, get the current location
+    Timer.periodic(new Duration(seconds: 5), (timer) async {
+      await _getCurrentLocation();
+    });
     await _getCurrentLocation();
   }
 }
