@@ -1,0 +1,12 @@
+
+
+{
+    "aps" : {
+        "alert" : {
+            "title" : "New note",
+            "body" : "A friend has left a new note!",
+            "action-loc-key" : "PLAY"
+        }
+    }
+}
+
