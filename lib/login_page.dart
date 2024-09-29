@@ -88,7 +88,7 @@ String phoneNumberNormalization(String phoneNumber) {
 
 class LoginPage extends StatefulWidget {
   final Function onSuccess;
-  const LoginPage(onSuccess, {super.key, required this.onSuccess});
+  const LoginPage({super.key, required this.onSuccess});
   
   @override
   State<LoginPage> createState() => _LoginPageState();
