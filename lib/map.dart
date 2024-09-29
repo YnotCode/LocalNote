@@ -256,6 +256,53 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   }
 
   // Animate the map movement
+  void _animateMapMovement(l.LatLng destCenter, double destZoom,
+      {int duration = 700}) {
+    // Dispose of any previous animation controller
+    _mapAnimationController?.dispose();
+
+    final latTween = Tween<double>(
+      begin: _currentCenter.latitude,
+      end: destCenter.latitude,
+    );
+
+    final lngTween = Tween<double>(
+      begin: _currentCenter.longitude,
+      end: destCenter.longitude,
+    );
+
+    final zoomTween = Tween<double>(
+      begin: _currentZoom,
+      end: destZoom,
+    );
+
+    _mapAnimationController = AnimationController(
+      duration: Duration(milliseconds: duration),
+      vsync: this,
+    );
+
+    _mapAnimationController!.addListener(() {
+      final lat = latTween.evaluate(_mapAnimationController!);
+      final lng = lngTween.evaluate(_mapAnimationController!);
+      final zoom = zoomTween.evaluate(_mapAnimationController!);
+
+      mapController.move(
+        l.LatLng(lat, lng),
+        zoom,
+      );
+    });
+
+    _mapAnimationController!.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _mapAnimationController?.dispose();
+        _mapAnimationController = null;
+      }
+    });
+
+    _mapAnimationController!.forward();
+  }
+
+  // Animate the map movement
   // void _animateMapMovement(l.LatLng destCenter, double destZoom,
   //     {int duration = 700}) {
   //   // Dispose of any previous animation controller
