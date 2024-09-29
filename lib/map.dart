@@ -111,7 +111,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   final MapController mapController = MapController();
   l.LatLng _currentCenter = l.LatLng(51.509364, -0.128928); // Default center
   double _currentZoom = 9.2;
-  final double _defaultZoom = 12.0; // Default zoom level when centering
+  final double _defaultZoom = 16.5; // Default zoom level when centering
 
   AnimationController? _mapAnimationController;
   Animation<l.LatLng>? _latLngAnimation;
