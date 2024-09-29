@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; // Import image picker
+import 'package:photo_manager/photo_manager.dart'; // Import photo_manager for gallery access
+import 'package:firebase_storage/firebase_storage.dart'; // Import Firebase Storage
 import 'package:image_cropper/image_cropper.dart'; // Import image cropper
 
 class NoteUploadPage extends StatefulWidget {
@@ -124,14 +126,15 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
       // Upload the image if present, otherwise skip
       String? imageUrl;
       if (_image != null) {
-        imageUrl = await _uploadImage(_image!);
+        imageUrl = await _uploadImage(_image!, ph!);
       }
 
+      debugPrint("Image uploaded: $imageUrl");
       await FirebaseFirestore.instance.collection("notes").add({
         "note": noteController.text,
         "creator": ph ?? "Unknown",
         "location": GeoPoint(position.latitude, position.longitude),
-        "title": titleController.text,
+        "timestamp": FieldValue.serverTimestamp(),
         if (imageUrl != null) "image": imageUrl, // Save the image URL only if there is an image
       });
 
@@ -146,11 +149,13 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
   }
 
   // Function to upload image to Firebase Storage (or any other storage service)
-  Future<String> _uploadImage(File imageFile) async {
-    // Implement the image upload logic here
-    // Return the image URL after uploading
-    // For demonstration, we'll return a placeholder URL
-    return "https://example.com/image.jpg";
+  Future<String> _uploadImage(File imageFile, String phoneNumber) async {
+    final storageRef = FirebaseStorage.instance.ref();
+    // create a reference with phone and timestamp
+    final imageRef = storageRef.child('images/$phoneNumber/${DateTime.now().millisecondsSinceEpoch}.jpg');
+    await imageRef.putFile(imageFile);
+
+    return await imageRef.getDownloadURL();
   }
 
   // Remove the selected image

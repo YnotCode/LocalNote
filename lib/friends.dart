@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -63,7 +64,7 @@ class _CommunityPageState extends State<CommunityPage> {
               friends.add(Follower(
                 username: elt['name'],
                 number: elt['phoneNumber'],
-                profileImageUrl: 'https://via.placeholder.com/150',
+                profileImageUrl: elt.containsKey('avatar') ? elt['avatar'] : 'https://via.placeholder.com/150',
                 requested: false,
               ));
             });
@@ -83,7 +84,7 @@ class _CommunityPageState extends State<CommunityPage> {
               .map((e) => Follower(
                     username: e.data()['name'],
                     number: e.data()['phoneNumber'],
-                    profileImageUrl: 'https://via.placeholder.com/150',
+                    profileImageUrl: e.data().containsKey('avatar') ? e.data()['avatar'] : 'https://via.placeholder.com/150',
                     requested: requestList.contains(e.data()['phoneNumber']),
                   ))
               .toList();
@@ -329,24 +330,35 @@ class _FriendRequestsState extends State<FriendRequestsPage> {
     var userPhoneNumber = prefs.getString("phone-number");
     var userName = prefs.getString("name");
 
+
+    final avatar = await FirebaseFirestore.instance.collection("users").where("phoneNumber", isEqualTo: follower.number).get().then((value) {
+      value.docs.forEach((doc) {
+        return doc.data().containsKey('avatar') ? doc.data()['avatar'] : 'https://via.placeholder.com/150';
+      });
+    });
     // Add the requester to the user's friend list
     FirebaseFirestore.instance.collection("users").where("phoneNumber", isEqualTo: follower.number).get().then((value) {
       value.docs.forEach((doc) {
         doc.reference.update({
           "friends": FieldValue.arrayUnion([
             { "phoneNumber": userPhoneNumber,
-              "name": userName }
+              "name": userName,
+              "avatar": avatar
+            }
           ])
         });
       });
     });
+    
 
     FirebaseFirestore.instance.collection("users").where("phoneNumber", isEqualTo: userPhoneNumber).get().then((value) {
      value.docs.forEach((doc) {
         doc.reference.update({
           "friends": FieldValue.arrayUnion([
             { "phoneNumber": follower.number,
-              "name": follower.username }
+              "name": follower.username,
+              "avatar": follower.profileImageUrl
+            }
           ])
         });
       });
