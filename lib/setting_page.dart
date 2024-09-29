@@ -1,23 +1,5 @@
 import 'package:flutter/material.dart';
-import 'toggle_notifications.dart';
-// void main() {
-//   runApp(const MyApp());
-// }
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'Settings Page Example',
-//       theme: ThemeData(
-//         primarySwatch: Colors.blue,
-//       ),
-//       home: const SettingsPage(),
-//     );
-//   }
-// }
+import 'package:local_note_2/toggle_notifications.dart'; // Ensure this is the correct path for your toggle notifications page
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -37,91 +19,131 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            // Profile Picture
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundImage: NetworkImage(
-                      'https://via.placeholder.com/150'), // Replace with your image URL
-                ),
-                const SizedBox(width: 16),
-                const Text(
-                  'User Name',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ],
+      body: Stack(
+        children: [
+          // Gradient background for the entire screen
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFFFFD580),  // Light sunset yellow
+                  Color(0xFFFDA65A),  // Sunset orange
+                  Color(0xFFF06D55),  // Deep sunset peach
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
-            const SizedBox(height: 20),
-            // Toggle for exclusive friends
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Exclusive Friends Only'),
-                Switch(
-                  value: _exclusiveFriends,
-                  onChanged: (value) {
-                    setState(() {
-                      _exclusiveFriends = value;
-                    });
-                  },
+          ),
+          // Main content of the screen
+          Scaffold(
+            backgroundColor: Colors.transparent,  // Makes the body of the Scaffold transparent
+            appBar: AppBar(
+              title: const Text(
+                'Settings',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
+              ),
+              iconTheme: const IconThemeData(
+                color: Colors.white,  // Set the back arrow color
+              ),
+              backgroundColor: Colors.transparent,  // Transparent AppBar
+              elevation: 0,  // Removes AppBar shadow
             ),
-            const SizedBox(height: 20),
-            // Additional Settings
-            ListTile(
-              leading: const Icon(Icons.notifications),
-              title: const Text('Notifications'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NotificationSettingsPage(),
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  // Profile Picture
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundImage: NetworkImage(
+                            'https://via.placeholder.com/150'), // Replace with your image URL
+                      ),
+                      const SizedBox(width: 16),
+                      const Text(
+                        'User Name',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.lock),
-              title: const Text('Privacy'),
-              onTap: () {
-                // Implement privacy settings logic
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.help),
-              title: const Text('Help & Support'),
-              onTap: () {
-                // Implement help & support logic
-              },
-            ),
-            const SizedBox(height: 20),
-            // Log out button
-            ElevatedButton(
-              onPressed: _logout,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                backgroundColor: Colors.blueAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
+                  const SizedBox(height: 20),
+                  // Toggle for exclusive friends
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Exclusive Friends Only',
+                        style: TextStyle(color: Colors.white), // Adjust text color to fit the theme
+                      ),
+                      Switch(
+                        value: _exclusiveFriends,
+                        onChanged: (value) {
+                          setState(() {
+                            _exclusiveFriends = value;
+                          });
+                        },
+                        activeColor: Colors.white,  // Set the switch color when active
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Additional Settings
+                  ListTile(
+                    leading: const Icon(Icons.notifications, color: Colors.white),
+                    title: const Text('Notifications', style: TextStyle(color: Colors.white)),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationSettingsPage(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.lock, color: Colors.white),
+                    title: const Text('Privacy', style: TextStyle(color: Colors.white)),
+                    onTap: () {
+                      // Implement privacy settings logic
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.help, color: Colors.white),
+                    title: const Text('Help & Support', style: TextStyle(color: Colors.white)),
+                    onTap: () {
+                      // Implement help & support logic
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  // Spacer to push the Log Out button to the bottom
+                  const Spacer(),
+                  // Log out button
+                  ElevatedButton(
+                    onPressed: _logout,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      backgroundColor: const Color.fromARGB(255, 188, 78, 66),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                    child: const Text(
+                      'Log Out',
+                      style: TextStyle(fontSize: 18.0, color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
-              child: const Text(
-                'Log Out',
-                style: TextStyle(fontSize: 18.0, color: Colors.white),
-              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
