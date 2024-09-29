@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -83,7 +85,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   String _locationStatus = 'Location not available';
 
   final MapController mapController = MapController();
-  l.LatLng _currentCenter = l.LatLng(51.509364, -0.128928); // Default center
+  l.LatLng _currentCenter = const l.LatLng(51.509364, -0.128929);
   double _currentZoom = 9.2;
   double _currentRotation = 0.0; // Track current rotation
   final double _defaultZoom = 16.5; // Default zoom level when centering
@@ -100,8 +102,56 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
   @override
   void initState() {
+
     super.initState();
 
+    final coll = FirebaseFirestore.instance.collection("notes");
+    coll.snapshots().listen((event) async {
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      String ph = prefs.getString("phone-number") ?? "";
+      
+      for (int i = 0; i < event.docChanges.length; ++i){
+
+        try{
+          final n = event.docChanges[i].doc.data() ?? {};
+
+          double clat = n["location"].latitude;
+          double clon = n["location"].longitude;
+          String name = "Unknown";
+
+          if (closeEnough(clat, clon, _currentPosition?.latitude ?? 0, _currentPosition?.longitude ?? 0)){
+            debugPrint("CLOSE: ${n["creator"]}");
+            final d = await FirebaseFirestore.instance.collection("users").where("phoneNumber", isEqualTo: n["creator"]).get();
+            if (d.docs.isNotEmpty){
+              debugPrint("GG");
+              name = d.docs[0].get("name");
+            }
+          }
+
+          setState(() {
+            markers = markers..insert(0,
+              Marker(
+                point: l.LatLng(
+                  n?["location"].latitude,
+                  n?["location"].longitude,
+                ),
+                width: 40.0,
+                height: 40.0,
+                child: _notePopup(n?["location"].latitude,
+                  n?["location"].longitude, _currentPosition!, name, n, ph),
+              ),
+              
+            );
+          });
+        }
+        catch(e){
+          debugPrint("Failed to listen to note: $e");
+        }
+        
+      }
+    });
     _checkLocationPermission().then((_) {
       debugPrint("LOCATION STATUS: $_locationStatus");
 
@@ -158,7 +208,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       begin: _currentRotation,
       end: destRotation,
     );
-
     _mapAnimationController = AnimationController(
       duration: Duration(milliseconds: duration),
       vsync: this,
@@ -184,9 +233,102 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
         _mapAnimationController = null;
       }
     });
-
     _mapAnimationController!.forward();
   }
+
+  // Animate the map movement
+  // void _animateMapMovement(l.LatLng destCenter, double destZoom,
+  //     {int duration = 700}) {
+  //   // Dispose of any previous animation controller
+  //   _mapAnimationController?.dispose();
+
+  //   final latTween = Tween<double>(
+  //     begin: _currentCenter.latitude,
+  //     end: destCenter.latitude,
+  //   );
+
+  //   final lngTween = Tween<double>(
+  //     begin: _currentCenter.longitude,
+  //     end: destCenter.longitude,
+  //   );
+
+  //   final zoomTween = Tween<double>(
+  //     begin: _currentZoom,
+  //     end: destZoom,
+  //   );
+
+  //   _mapAnimationController = AnimationController(
+  //     duration: Duration(milliseconds: duration),
+  //     vsync: this,
+  //   );
+
+  //   _mapAnimationController!.addListener(() {
+  //     final lat = latTween.evaluate(_mapAnimationController!);
+  //     final lng = lngTween.evaluate(_mapAnimationController!);
+  //     final zoom = zoomTween.evaluate(_mapAnimationController!);
+
+  //     mapController.move(
+  //       l.LatLng(lat, lng),
+  //       zoom,
+  //     );
+  //   });
+
+  //   _mapAnimationController!.addStatusListener((status) {
+  //     if (status == AnimationStatus.completed) {
+  //       _mapAnimationController?.dispose();
+  //       _mapAnimationController = null;
+  //     }
+  //   });
+
+  //   _mapAnimationController!.forward();
+  // }
+
+  // Animate the map movement
+  // void _animateMapMovement(l.LatLng destCenter, double destZoom,
+  //     {int duration = 700}) {
+  //   // Dispose of any previous animation controller
+  //   _mapAnimationController?.dispose();
+
+  //   final latTween = Tween<double>(
+  //     begin: _currentCenter.latitude,
+  //     end: destCenter.latitude,
+  //   );
+
+  //   final lngTween = Tween<double>(
+  //     begin: _currentCenter.longitude,
+  //     end: destCenter.longitude,
+  //   );
+
+  //   final zoomTween = Tween<double>(
+  //     begin: _currentZoom,
+  //     end: destZoom,
+  //   );
+
+  //   _mapAnimationController = AnimationController(
+  //     duration: Duration(milliseconds: duration),
+  //     vsync: this,
+  //   );
+
+  //   _mapAnimationController!.addListener(() {
+  //     final lat = latTween.evaluate(_mapAnimationController!);
+  //     final lng = lngTween.evaluate(_mapAnimationController!);
+  //     final zoom = zoomTween.evaluate(_mapAnimationController!);
+
+  //     mapController.move(
+  //       l.LatLng(lat, lng),
+  //       zoom,
+  //     );
+  //   });
+
+  //   _mapAnimationController!.addStatusListener((status) {
+  //     if (status == AnimationStatus.completed) {
+  //       _mapAnimationController?.dispose();
+  //       _mapAnimationController = null;
+  //     }
+  //   });
+
+  //   _mapAnimationController!.forward();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -296,6 +438,13 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
         desiredAccuracy: LocationAccuracy.high,
       );
 
+      // StreamSubscription<Position> positionStream = Geolocator.getPositionStream(locationSettings: LocationSettings(accuracy: LocationAccuracy.best, distanceFilter: 1)).listen(
+      //     (Position? position) {
+      //       String update = position == null ? 'Unknown' : '${position.latitude.toString()}, ${position.longitude.toString()}}';
+      //       debugPrint("Received update: $update");
+      //     }
+      // );
+
       final destCenter = l.LatLng(position.latitude, position.longitude);
       final destZoom = _defaultZoom;
 
@@ -337,10 +486,12 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
+                child: _notePopup(clat, clon, position, name, note, ph),
               ),
             );
         });
       }
+
     } catch (e) {
       setState(() {
         _locationStatus = 'Error getting location: $e';
@@ -348,12 +499,92 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     }
   }
 
+  CupertinoButton _notePopup(double clat, double clon, Position position, String name, note, String? ph) {
+    return CupertinoButton(
+                padding: EdgeInsets.zero,
+                minSize: 0.0,
+                onPressed: (){
+                  if (!closeEnough(clat, clon, position.latitude, position.longitude)){
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(
+                        "Too far away"
+                      ))
+                    );
+                    return;
+                  }
+                  showCupertinoModalPopup(context: context, builder: (context){
+                    return Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height * 0.8,
+                      color: Colors.white.withOpacity(0.8),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              const SizedBox(width: 10.0),
+                              CupertinoButton(
+                                onPressed: ()=>Navigator.pop(context),
+                                child: Icon(CupertinoIcons.xmark)
+                              ),
+                              Expanded(child: Container())
+                            ],
+                          ),
+                          Expanded(child: Container(),),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(name, style: const TextStyle(fontSize: 25.0, fontWeight: FontWeight.normal, color: Colors.black, decoration: TextDecoration.none)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 50),
+                          Text(note["title"], style: const TextStyle(fontSize: 40.0, fontWeight: FontWeight.bold, color: Colors.black, decoration: TextDecoration.none)),
+                          const SizedBox(height: 10),
+                          Text(note["note"], style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.w500, color: Colors.black, decoration: TextDecoration.none)),
+                          Expanded(child: Container(),),
+                          Expanded(child: Container(),)
+                        ]
+                      )
+                    );
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: note["creator"] == ph ? Colors.blue.withOpacity(0.8)  : Colors.purple.withOpacity(0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.edit_document,
+                      color: Colors.white,
+                      size: 20.0,
+                    ),
+                  ),
+                ),
+              );
+  }
+
   Future<void> _checkLocationPermission() async {
     // Check if location services are enabled
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+    final destCenter = l.LatLng(
+          _currentPosition?.latitude ?? 0,
+          _currentPosition?.longitude ?? 0
+        );
+
+
     if (!serviceEnabled) {
       setState(() {
         _locationStatus = 'Location services are disabled.';
+        _currentPosition = null;
+        // Move to default position
+        _animateMapMovement(destCenter, _defaultZoom);
+        // _currentCenter = _defaultCenter;
+        _currentZoom = _defaultZoom;
       });
       return;
     }
@@ -365,6 +596,11 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       if (permission == LocationPermission.denied) {
         setState(() {
           _locationStatus = 'Location permission denied';
+          _currentPosition = null;
+          // Move to default position
+          _animateMapMovement(destCenter, _defaultZoom);
+          // _currentCenter = _defaultCenter;
+          _currentZoom = _defaultZoom;
         });
         return;
       }
@@ -373,6 +609,11 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     if (permission == LocationPermission.deniedForever) {
       setState(() {
         _locationStatus = 'Location permissions are permanently denied.';
+        _currentPosition = null;
+        // Move to default position
+        _animateMapMovement(destCenter, _defaultZoom);
+        // _currentCenter = _defaultCenter;
+        _currentZoom = _defaultZoom;
       });
       return;
     }

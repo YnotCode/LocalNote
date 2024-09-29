@@ -23,6 +23,7 @@ dependencies:
   google_fonts: ^6.2.1
   image_picker: ^0.8.4+10
   photo_manager: ^3.5.0
+  location: ^6.0.2
 
 dev_dependencies:
   flutter_test:
