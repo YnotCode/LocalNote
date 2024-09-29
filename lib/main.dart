@@ -20,7 +20,7 @@ import 'setting_page.dart';
 import 'get_name_page.dart';
 
 void main() async {
-  SharedPreferences.setMockInitialValues({});
+  //SharedPreferences.setMockInitialValues({});
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

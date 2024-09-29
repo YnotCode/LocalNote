@@ -254,7 +254,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
     _mapAnimationController!.forward();
   }
-
   // Animate the map movement
   // void _animateMapMovement(l.LatLng destCenter, double destZoom,
   //     {int duration = 700}) {
@@ -669,7 +668,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     );
   },
 );
-
                 },
                 child: Container(
                   decoration: BoxDecoration(

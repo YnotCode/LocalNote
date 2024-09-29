@@ -139,7 +139,8 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
     // For demonstration, we'll return a placeholder URL
     return "https://example.com/image.jpg";
   }
-@override
+
+  @override
   Widget build(BuildContext context) {
     // Calculate the height for the image (30% of screen height)
     double imageHeight = MediaQuery.of(context).size.height * 0.3;

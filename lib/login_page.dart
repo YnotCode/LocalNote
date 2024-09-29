@@ -56,7 +56,6 @@ String phoneNumberNormalization(String phoneNumber) {
   }
   return '+1${normalizedNumber}';
 }
-
 class LoginPage extends StatefulWidget {
   final Function onSuccess;
   const LoginPage({super.key, required this.onSuccess});

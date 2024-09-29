@@ -25,7 +25,7 @@ class _GetNamePageState extends State<GetNamePage> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-                        Color(0xFFFFD580), // Light sunset yellow
+              Color(0xFFFFD580), // Light sunset yellow
               Color(0xFFFDA65A), // Sunset orange
             ],
             begin: Alignment.topCenter,
