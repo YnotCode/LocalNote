@@ -8,7 +8,7 @@ import 'package:latlong2/latlong.dart' as l;
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-Future<List<DocumentSnapshot>> getNotesWithinRadius(
+Future<List> getNotesWithinRadius(
   double centerLat,
   double centerLon,
   double radiusInMeters,
@@ -36,6 +36,7 @@ Future<List<DocumentSnapshot>> getNotesWithinRadius(
       // .where('note.longitude', isGreaterThanOrEqualTo: minLon)
       // .where('note.longitude', isLessThanOrEqualTo: maxLon);
 
+  final ans = [];
 
   for (QueryDocumentSnapshot docSnapshot in d.docs) {
     // Access each document's data
@@ -44,7 +45,7 @@ Future<List<DocumentSnapshot>> getNotesWithinRadius(
     double long = data["location"].longitude;
     debugPrint("$lat $long");
     if (lat >= minLat && lat <= maxLat && long >= minLon && long <= maxLon){
-      debugPrint(data["title"]);
+      ans.add(data);
     }
   }
 
@@ -67,7 +68,7 @@ Future<List<DocumentSnapshot>> getNotesWithinRadius(
   //   }
   // }
 
-  return [];
+  return ans;
 }
 
 
@@ -103,7 +104,7 @@ class MainMap extends StatefulWidget {
 }
 
 
-class _MainMapState extends State<MainMap> {
+class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   Position? _currentPosition;
   String _locationStatus = 'Location not available';
 
@@ -116,6 +117,8 @@ class _MainMapState extends State<MainMap> {
   Animation<l.LatLng>? _latLngAnimation;
   Animation<double>? _zoomAnimation;
 
+  List<Marker> markers = [];
+
   @override
   void dispose() {
     _mapAnimationController?.dispose();
@@ -125,8 +128,35 @@ class _MainMapState extends State<MainMap> {
   @override
   void initState() {
     super.initState();
+
     _checkLocationPermission().then((_) {
       debugPrint("LOCATION STATUS: $_locationStatus");
+      
+      setState(() {
+        markers = markers..add(
+          Marker(
+        point: l.LatLng(
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+        ),
+        width: 40.0,
+        height: 40.0,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.blue.withOpacity(0.7),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Icon(
+              Icons.my_location,
+              color: Colors.white,
+              size: 20.0,
+            ),
+          ),
+        ),
+      )
+        );
+      });
     });
   }
 
@@ -149,10 +179,10 @@ class _MainMapState extends State<MainMap> {
       end: destZoom,
     );
 
-    // _mapAnimationController = AnimationController(
-    //   duration: Duration(milliseconds: duration),
-    //   vsync: this,
-    // );
+    _mapAnimationController = AnimationController(
+      duration: Duration(milliseconds: duration),
+      vsync: this,
+    );
 
     _mapAnimationController!.addListener(() {
       final lat = latTween.evaluate(_mapAnimationController!);
@@ -178,33 +208,33 @@ class _MainMapState extends State<MainMap> {
   @override
   Widget build(BuildContext context) {
     // Create a list of markers
-    final List<Marker> markers = [];
 
     // If the current position is available, add a marker at that location
     if (_currentPosition != null) {
-      markers.add(
-        Marker(
-          point: l.LatLng(
-            _currentPosition!.latitude,
-            _currentPosition!.longitude,
-          ),
-          width: 40.0,
-          height: 40.0,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.7),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Icon(
-                Icons.my_location,
-                color: Colors.white,
-                size: 20.0,
-              ),
-            ),
-          ),
-        ),
-      );
+
+      // markers.add(
+      //   Marker(
+      //     point: l.LatLng(
+      //       37.786210,
+      //       -122.402530
+      //     ),
+      //     width: 40.0,
+      //     height: 40.0,
+      //     child: Container(
+      //       decoration: BoxDecoration(
+      //         color: Colors.red.withOpacity(0.7),
+      //         shape: BoxShape.circle,
+      //       ),
+      //       child: Center(
+      //         child: Icon(
+      //           Icons.my_location,
+      //           color: Colors.white,
+      //           size: 20.0,
+      //         ),
+      //       ),
+      //     ),
+      //   ),
+      // );
     }
 
     return Stack(
@@ -329,9 +359,33 @@ class _MainMapState extends State<MainMap> {
 
       final notes = await getNotesWithinRadius(position.latitude, position.longitude, 100000000);
       for (final note in notes){
-        if (note.exists){
-          debugPrint(note.get("title"));
-        }
+          debugPrint("Here!!");
+          debugPrint("${note["location"].latitude} ${note["location"].longitude}");
+          setState(() {
+            markers = markers..add(
+            Marker(
+                point: l.LatLng(
+                  note["location"].latitude,
+                  note["location"].longitude,
+                ),
+                width: 40.0,
+                height: 40.0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.edit_document,
+                      color: Colors.white,
+                      size: 20.0,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          });
       }
 
     } catch (e) {
