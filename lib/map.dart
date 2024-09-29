@@ -288,114 +288,114 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        FlutterMap(
-          mapController: mapController,
-          options: MapOptions(
-            initialCenter: _currentCenter,
-            initialZoom: _currentZoom,
-            crs: const Epsg3857(),
-            onMapEvent: (MapEvent mapEvent) {
-              setState(() {
-                _currentCenter = mapEvent.camera.center;
-                _currentZoom = mapEvent.camera.zoom;
-              });
-            },
-          ),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.example.app',
-            ),
-            if (markers.isNotEmpty)
-              MarkerLayer(
-                markers: markers,
-              ),
-          ],
+Widget build(BuildContext context) {
+  return Stack(
+    children: [
+      FlutterMap(
+        mapController: mapController,
+        options: MapOptions(
+          initialCenter: _currentCenter,
+          initialZoom: _currentZoom,
+          crs: const Epsg3857(),
+          onMapEvent: (MapEvent mapEvent) {
+            setState(() {
+              _currentCenter = mapEvent.camera.center;
+              _currentZoom = mapEvent.camera.zoom;
+            });
+          },
         ),
-        // Zoom controls and "friends" button at the bottom right corner
-        Positioned(
-          bottom: 20,
-          right: 20,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // "Friends" button
-              FloatingActionButton(
-                mini: true,
-                heroTag: "friends",
-                child: friendsToggled ? Icon(Icons.group) : Icon(Icons.person),
-                onPressed: () {
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.example.app',
+          ),
+          if (markers.isNotEmpty)
+            MarkerLayer(
+              markers: markers,
+            ),
+        ],
+      ),
+      // Zoom controls and "friends" button at the bottom right corner
+      Positioned(
+        bottom: 20,
+        right: 20,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // "Friends" button
+            FloatingActionButton(
+              mini: true,
+              heroTag: "friends",
+              child: friendsToggled ? Icon(Icons.group) : Icon(Icons.person),
+              onPressed: () {
                   setState(() {
                     friendsToggled = !friendsToggled;
                     markers = [];
                   });
 
                   _loadNotes();
-                  });
                   // Add functionality for the friends button
                   debugPrint('Friends button pressed');
                 },
-              ),
-              SizedBox(height: 10),
-              FloatingActionButton(
-                mini: true,
-                heroTag: "zoomIn",
-                child: Icon(Icons.zoom_in),
-                onPressed: () {
-                  setState(() {
-                    final destZoom = _currentZoom + 1;
-                    _animateMapMovement(_currentCenter, destZoom, duration: 500);
-                    _currentZoom = destZoom;
-                  });
-                },
-              ),
-              SizedBox(height: 10),
-              FloatingActionButton(
-                mini: true,
-                heroTag: "zoomOut",
-                child: Icon(Icons.zoom_out),
-                onPressed: () {
-                  setState(() {
-                    final destZoom = _currentZoom - 1;
-                    _animateMapMovement(_currentCenter, destZoom, duration: 500);
-                    _currentZoom = destZoom;
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-        // Center button at the bottom middle
-        Positioned(
-          bottom: 20,
-          left: MediaQuery.of(context).size.width / 2 - 25, // Adjust position
-          child: FloatingActionButton(
-            mini: true,
-            heroTag: "centerMap",
-            child: Icon(Icons.my_location),
-            onPressed: () {
-              if (_currentPosition != null) {
-                final destCenter = l.LatLng(
-                  _currentPosition!.latitude,
-                  _currentPosition!.longitude,
-                );
+            ),
+            SizedBox(height: 10),
+            FloatingActionButton(
+              mini: true,
+              heroTag: "zoomIn",
+              child: Icon(Icons.zoom_in),
+              onPressed: () {
                 setState(() {
-                  _animateMapMovement(destCenter, _defaultZoom);
-                  _currentCenter = destCenter;
-                  _currentZoom = _defaultZoom;
+                  final destZoom = _currentZoom + 1;
+                  _animateMapMovement(_currentCenter, destZoom, duration: 500);
+                  _currentZoom = destZoom;
                 });
-              } else {
-                debugPrint('Current position not available');
-              }
-            },
-          ),
+              },
+            ),
+            SizedBox(height: 10),
+            FloatingActionButton(
+              mini: true,
+              heroTag: "zoomOut",
+              child: Icon(Icons.zoom_out),
+              onPressed: () {
+                setState(() {
+                  final destZoom = _currentZoom - 1;
+                  _animateMapMovement(_currentCenter, destZoom, duration: 500);
+                  _currentZoom = destZoom;
+                });
+              },
+            ),
+          ],
         ),
-      ],
-    );
-  }
+      ),
+      // Center button at the bottom middle
+      Positioned(
+        bottom: 20,
+        left: MediaQuery.of(context).size.width / 2 - 25, // Adjust position
+        child: FloatingActionButton(
+          mini: true,
+          heroTag: "centerMap",
+          child: Icon(Icons.my_location),
+          onPressed: () {
+            if (_currentPosition != null) {
+              final destCenter = l.LatLng(
+                _currentPosition!.latitude,
+                _currentPosition!.longitude,
+              );
+              setState(() {
+                _animateMapMovement(destCenter, _defaultZoom);
+                _currentCenter = destCenter;
+                _currentZoom = _defaultZoom;
+              });
+            } else {
+              debugPrint('Current position not available');
+            }
+          },
+        ),
+      ),
+    ],
+  );
+}
+
 
 
 
