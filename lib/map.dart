@@ -712,6 +712,9 @@ Widget build(BuildContext context) {
     }
 
     // If permission is granted, get the current location
+    Timer.periodic(new Duration(seconds: 5), (timer) async {
+      await _getCurrentLocation();
+    });
     await _getCurrentLocation();
   }
 }

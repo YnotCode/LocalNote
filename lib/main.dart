@@ -40,11 +40,11 @@ import 'package:rxdart/rxdart.dart';
 
 
 void main() async {
-  SharedPreferences.setMockInitialValues({});
+  //SharedPreferences.setMockInitialValues({});
   WidgetsFlutterBinding.ensureInitialized();
-  // await Firebase.initializeApp(
-  //     options: DefaultFirebaseOptions.currentPlatform,
-  // );
+  await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // final messaging = FirebaseMessaging.instance;
 
