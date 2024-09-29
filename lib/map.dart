@@ -104,14 +104,11 @@ class MainMap extends StatefulWidget {
   @override
   State<MainMap> createState() => _MainMapState();
 }
-
-
 class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   Position? _currentPosition;
   String _locationStatus = 'Location not available';
 
   final MapController mapController = MapController();
-  l.LatLng _currentCenter = l.LatLng(51.509364, -0.128928); // Default center
   double _currentZoom = 9.2;
   final double _defaultZoom = 12.0; // Default zoom level when centering
 
@@ -130,7 +127,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
     _checkLocationPermission().then((_) {
       debugPrint("LOCATION STATUS: $_locationStatus");
       
@@ -207,10 +203,56 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     _mapAnimationController!.forward();
   }
 
+  // Animate the map movement
+  void _animateMapMovement(l.LatLng destCenter, double destZoom,
+      {int duration = 700}) {
+    // Dispose of any previous animation controller
+    _mapAnimationController?.dispose();
+
+    final latTween = Tween<double>(
+      begin: _currentCenter.latitude,
+      end: destCenter.latitude,
+    );
+
+    final lngTween = Tween<double>(
+      begin: _currentCenter.longitude,
+      end: destCenter.longitude,
+    );
+
+    final zoomTween = Tween<double>(
+      begin: _currentZoom,
+      end: destZoom,
+    );
+
+    _mapAnimationController = AnimationController(
+      duration: Duration(milliseconds: duration),
+      vsync: this,
+    );
+
+    _mapAnimationController!.addListener(() {
+      final lat = latTween.evaluate(_mapAnimationController!);
+      final lng = lngTween.evaluate(_mapAnimationController!);
+      final zoom = zoomTween.evaluate(_mapAnimationController!);
+
+      mapController.move(
+        l.LatLng(lat, lng),
+        zoom,
+      );
+    });
+
+    _mapAnimationController!.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _mapAnimationController?.dispose();
+        _mapAnimationController = null;
+      }
+    });
+
+    _mapAnimationController!.forward();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Create a list of markers
-
     // If the current position is available, add a marker at that location
     if (_currentPosition != null) {
 
@@ -459,20 +501,30 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
           debugPrint("Failed to load note: $e");
         }
       }
-
     } catch (e) {
       setState(() {
         _locationStatus = 'Error getting location: $e';
+        _currentPosition = null; // Ensure current position is null
+        // Move to default position if location can't be found
+        _animateMapMovement(_defaultCenter, _defaultZoom);
+        _currentCenter = _defaultCenter;
+        _currentZoom = _defaultZoom;
       });
+      debugPrint('Error getting location: $e');
     }
   }
 
   Future<void> _checkLocationPermission() async {
     // Check if location services are enabled
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       setState(() {
         _locationStatus = 'Location services are disabled.';
+        _currentPosition = null;
+        // Move to default position
+        _animateMapMovement(_defaultCenter, _defaultZoom);
+        _currentCenter = _defaultCenter;
+        _currentZoom = _defaultZoom;
       });
       return;
     }
@@ -484,6 +536,11 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       if (permission == LocationPermission.denied) {
         setState(() {
           _locationStatus = 'Location permission denied';
+          _currentPosition = null;
+          // Move to default position
+          _animateMapMovement(_defaultCenter, _defaultZoom);
+          _currentCenter = _defaultCenter;
+          _currentZoom = _defaultZoom;
         });
         return;
       }
@@ -492,6 +549,11 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     if (permission == LocationPermission.deniedForever) {
       setState(() {
         _locationStatus = 'Location permissions are permanently denied.';
+        _currentPosition = null;
+        // Move to default position
+        _animateMapMovement(_defaultCenter, _defaultZoom);
+        _currentCenter = _defaultCenter;
+        _currentZoom = _defaultZoom;
       });
       return;
     }
