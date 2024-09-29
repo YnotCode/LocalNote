@@ -28,7 +28,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 colors: [
                   Color(0xFFFFD580), // Light sunset yellow
                   Color(0xFFFDA65A), // Sunset orange
-                  Color(0xFFF06D55), // Deep sunset peach
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -37,19 +36,18 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           // Main content of the screen
           Scaffold(
-            backgroundColor: Colors
-                .transparent, // Makes the body of the Scaffold transparent
+            backgroundColor: Colors.transparent, // Makes the body transparent
             appBar: AppBar(
               title: const Text(
                 'Settings',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Color.fromARGB(222, 57, 32, 15),
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              iconTheme: const IconThemeData(
-                color: Colors.white, // Set the back arrow color
+              iconTheme: IconThemeData(
+                color: Color.fromARGB(222, 57, 32, 15), // Set the back arrow color
               ),
               backgroundColor: Colors.transparent, // Transparent AppBar
               elevation: 0, // Removes AppBar shadow
@@ -71,14 +69,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       const Text(
                         'User Name',
                         style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(222, 57, 32, 15),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  // const Divider(color: Colors.white70), // Divider for profile section
 
                   // Toggle for exclusive friends
                   Row(
@@ -87,9 +85,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       const Text(
                         'Exclusive Friends Only',
                         style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20), // Adjust text color to fit the theme
-                        textAlign: TextAlign.center, // Center the text
+                          color: Color.fromARGB(222, 57, 32, 15),
+                          fontSize: 20,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                       Switch(
                         value: _exclusiveFriends,
@@ -98,65 +97,58 @@ class _SettingsPageState extends State<SettingsPage> {
                             _exclusiveFriends = value;
                           });
                         },
-                        activeColor:
-                            Colors.white, // Set the switch color when active
+                        activeColor: Color.fromARGB(222, 57, 32, 15),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Divider(
-                      color: Colors.white70), // Divider for toggle section
+                  const Divider(color: Color.fromARGB(222, 57, 32, 15)), // Divider for toggle section
 
                   // Additional Settings
                   ListTile(
-                    leading:
-                        const Icon(Icons.notifications, color: Colors.white),
+                    leading: const Icon(Icons.notifications, color: Color.fromARGB(222, 57, 32, 15)),
                     title: const Text('Notifications',
-                        style: TextStyle(color: Colors.white)),
+                        style: TextStyle(color: Color.fromARGB(222, 57, 32, 15))),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              const NotificationSettingsPage(),
+                          builder: (context) => const NotificationSettingsPage(),
                         ),
                       );
                     },
                   ),
-                  const Divider(
-                      color: Colors.white70), // Divider for notifications
+                  const Divider(color: Color.fromARGB(222, 57, 32, 15)), // Divider for notifications
 
                   ListTile(
-                    leading: const Icon(Icons.lock, color: Colors.white),
+                    leading: const Icon(Icons.lock, color: Color.fromARGB(222, 57, 32, 15)),
                     title: const Text('Privacy',
-                        style: TextStyle(color: Colors.white)),
+                        style: TextStyle(color: Color.fromARGB(222, 57, 32, 15))),
                     onTap: () {
                       // Implement privacy settings logic
                     },
                   ),
-                  const Divider(color: Colors.white70), // Divider for privacy
+                  const Divider(color: Color.fromARGB(222, 57, 32, 15)), // Divider for privacy
 
                   ListTile(
-                    leading: const Icon(Icons.help, color: Colors.white),
+                    leading: const Icon(Icons.help, color: Color.fromARGB(222, 57, 32, 15)),
                     title: const Text('Help & Support',
-                        style: TextStyle(color: Colors.white)),
+                        style: TextStyle(color: Color.fromARGB(222, 57, 32, 15))),
                     onTap: () {
                       // Implement help & support logic
                     },
                   ),
                   const SizedBox(height: 20),
-                  // Spacer to push the Log Out button to the bottom
-                  const Spacer(),
-                  const Divider(
-                      color: Colors.white70), // Divider before log out
+                  // Logo Image
+                  
+                  const SizedBox(height: 100), // Spacing between logo and button
 
                   // Log out button
                   ElevatedButton(
                     onPressed: _logout,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 15),
-                      backgroundColor: const Color.fromARGB(255, 188, 78, 66),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      backgroundColor: Color.fromARGB(255, 201, 121, 78),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),

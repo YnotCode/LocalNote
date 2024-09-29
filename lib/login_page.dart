@@ -117,9 +117,9 @@ class _LoginPageState extends State<LoginPage> {
                   style: TextStyle(color: const Color.fromARGB(222, 57, 32, 15)),
                   decoration: InputDecoration(
                     hintText: "Phone Number",
-                    hintStyle: TextStyle(color: const Color.fromARGB(222, 57, 32, 15)),
+                    hintStyle: TextStyle(color: const Color.fromARGB(222, 134, 109, 91)),
                     filled: true,
-                    fillColor: const Color.fromARGB(92, 238, 214, 187),
+                    fillColor: const Color.fromARGB(92, 255, 246, 235),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
