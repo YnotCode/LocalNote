@@ -51,6 +51,8 @@
 	<key>NSCameraUsageDescription</key>
 	<string>We need access to your camera to capture photos for note uploads.
 </string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library for note uploads</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
