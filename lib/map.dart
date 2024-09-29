@@ -318,7 +318,7 @@ class _MainMapState extends State<MainMap> {
 
       setState(() {
         _currentPosition = position;
-        _animateMapMovement(destCenter, destZoom);
+        //_animateMapMovement(destCenter, destZoom);
         _currentCenter = destCenter;
         _currentZoom = destZoom;
         _locationStatus =
@@ -342,6 +342,35 @@ class _MainMapState extends State<MainMap> {
   }
 
   Future<void> _checkLocationPermission() async {
-    // ... (rest of the method remains the same)
+    // Check if location services are enabled
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      setState(() {
+        _locationStatus = 'Location services are disabled.';
+      });
+      return;
+    }
+
+    // Check for location permission
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        setState(() {
+          _locationStatus = 'Location permission denied';
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      setState(() {
+        _locationStatus = 'Location permissions are permanently denied.';
+      });
+      return;
+    }
+
+    // If permission is granted, get the current location
+    await _getCurrentLocation();
   }
 }

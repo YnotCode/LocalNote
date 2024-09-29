@@ -3,9 +3,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:local_note_2/note_upload.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class NoteUploadPage extends StatelessWidget {
+class NoteUploadPage extends StatefulWidget {
   const NoteUploadPage({super.key});
+
+  @override
+  State<NoteUploadPage> createState() => _NoteUploadPageState();
+}
+
+class _NoteUploadPageState extends State<NoteUploadPage> {
+
+  TextEditingController titleController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -19,15 +28,20 @@ class NoteUploadPage extends StatelessWidget {
           children: [
             Row(
               children: [
-                SizedBox(width: 5),
+                const SizedBox(width: 5),
                 CupertinoButton(
                   onPressed: (){
                     Navigator.of(context).pop();
                   },
-                  child: Icon(CupertinoIcons.chevron_back, size: 40.0, color: Colors.black)
+                  child: const Icon(CupertinoIcons.chevron_back, size: 40.0, color: Colors.black)
                 ), 
                 Expanded(child: Container(),)
               ]
+            ),
+            const SizedBox(height: 10),
+            CupertinoTextField(
+              controller: titleController,
+              placeholder: "Title",
             ),
             NoteUploadWidget(onAddNote: (String note) async {
               try{
@@ -37,11 +51,13 @@ class NoteUploadPage extends StatelessWidget {
                   await Geolocator.getCurrentPosition(
                     desiredAccuracy: LocationAccuracy.high,
                   );
+                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                  String? ph = prefs.getString("phone-number");
                   FirebaseFirestore.instance.collection("notes").add({
                     "note": note,
-                    "creator": "+1111111111",
+                    "creator": ph ?? "ur mom",
                     "location": GeoPoint(position.latitude, position.longitude),
-                    "title": "NOTE"
+                    "title": titleController.text
                   });
               Navigator.of(context).pop();
               }
