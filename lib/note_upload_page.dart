@@ -134,7 +134,7 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
         "note": noteController.text,
         "creator": ph ?? "Unknown",
         "location": GeoPoint(position.latitude, position.longitude),
-        "title": titleController.text,
+        "timestamp": FieldValue.serverTimestamp(),
         if (imageUrl != null) "image": imageUrl, // Save the image URL only if there is an image
       });
 

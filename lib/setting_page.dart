@@ -1,8 +1,11 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:local_note_2/toggle_notifications.dart'; // Ensure this is the correct path for your toggle notifications page
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -11,10 +14,42 @@ class SettingsPage extends StatefulWidget {
   _SettingsPageState createState() => _SettingsPageState();
 }
 
+// Function to upload image to Firebase Storage (or any other storage service)
+Future<String> _uploadImage(File imageFile, String phoneNumber) async {
+  final storageRef = FirebaseStorage.instance.ref();
+  // create a reference with phone and timestamp
+  final imageRef = storageRef.child('images/$phoneNumber/${DateTime.now().millisecondsSinceEpoch}.jpg');
+  await imageRef.putFile(imageFile);
+
+  return await imageRef.getDownloadURL();
+}
+
 class _SettingsPageState extends State<SettingsPage> {
   bool _exclusiveFriends = false;
   File? _avatarImage;
   final ImagePicker _picker = ImagePicker();
+  String username = '';
+  String avatarUrl = '';
+
+  _loadUserData () {
+    SharedPreferences.getInstance().then((perfs)  {
+      final ph = perfs.getString('phone-number');
+      FirebaseFirestore.instance.collection('users').where('phoneNumber', isEqualTo: ph).get().then((user) {
+        setState(() {
+
+          username = user.docs[0].data()['name'];
+          bool hasAvatar = user.docs[0].data()?.containsKey('avatar') ?? false;
+          avatarUrl = hasAvatar ? user.docs[0].data()['avatar'] : '';
+        });
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
 
   // Function to pick and crop the avatar image
   Future<void> _pickAndCropImage() async {
@@ -44,6 +79,20 @@ class _SettingsPageState extends State<SettingsPage> {
           setState(() {
             _avatarImage = File(croppedFile.path);
           });
+
+          final perfs = await SharedPreferences.getInstance();
+          final ph = perfs.getString('phone-number');
+          final imageUrl = await _uploadImage(_avatarImage!, ph!);
+
+          FirebaseFirestore.instance
+            .collection('users')
+            .where('phoneNumber', isEqualTo: ph)
+            .get()
+            .then((user) {
+              user.docs[0].reference.update({'avatar': imageUrl});
+            });
+          
+          _loadUserData();
           // Here you might want to upload the avatar to a server or save it locally
         }
       }
@@ -108,14 +157,13 @@ class _SettingsPageState extends State<SettingsPage> {
                           radius: 40,
                           backgroundImage: _avatarImage != null
                               ? FileImage(_avatarImage!) as ImageProvider
-                              : const NetworkImage(
-                                  'https://via.placeholder.com/150'), // Replace with your default image URL
+                              : avatarUrl == '' ? const NetworkImage('https://via.placeholder.com/150') : NetworkImage(avatarUrl),
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Text(
-                        'User Name',
-                        style: TextStyle(
+                      Text(
+                        username,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Color.fromARGB(222, 57, 32, 15),
