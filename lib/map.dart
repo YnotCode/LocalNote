@@ -250,7 +250,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
     _mapAnimationController!.forward();
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -449,35 +449,127 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   CupertinoButton _notePopup(double clat, double clon, Position? position,
       String name, dynamic note, String? ph) {
     return CupertinoButton(
-      padding: EdgeInsets.zero,
-      minSize: 0.0,
-      onPressed: () {
-        if (position == null ||
-            !closeEnough(clat, clon, position.latitude, position.longitude)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Too far away")),
-          );
-          return;
-        }
-        showCupertinoModalPopup(
-          context: context,
-          builder: (context) {
-            return Container(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height * 0.8,
-              color: Colors.white.withOpacity(0.8),
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const SizedBox(width: 10.0),
-                      CupertinoButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Icon(CupertinoIcons.xmark),
-                      ),
-                      Expanded(child: Container())
-                    ],
+                padding: EdgeInsets.zero,
+                minSize: 0.0,
+                onPressed: (){
+                  if (!closeEnough(clat, clon, position.latitude, position.longitude)){
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(
+                        "Too far away"
+                      ))
+                    );
+                    return;
+                  }
+                  showCupertinoModalPopup(
+  context: context,
+  builder: (context) {
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height * 0.8,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.95), // Slightly stronger opacity for better readability
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)), // Rounded top corners
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center, // Centers the content horizontally
+        children: [
+          const SizedBox(height: 20), // Adjusted top padding for more space
+          
+          // Close Icon Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SizedBox(width: 10.0),
+              CupertinoButton(
+                onPressed: () => Navigator.pop(context),
+                child: Icon(
+                  CupertinoIcons.xmark,
+                  size: 30.0, // Larger close icon for better visibility
+                  color: Colors.black54, // Slightly subdued color for icon
+                ),
+              ),
+              Expanded(child: Container()),
+            ],
+          ),
+          
+          const SizedBox(height: 20), // Space between the close button and content
+          
+          // Profile or Name Section - Centered
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Text(
+              'from ${name}',
+              style: const TextStyle(
+                fontSize: 22.0,
+                fontWeight: FontWeight.bold, // Bold for emphasis
+                color: Colors.black87,
+                decoration: TextDecoration.none,
+              ),
+              textAlign: TextAlign.center, // Center-align the name
+            ),
+          ),
+          
+          const SizedBox(height: 30), // More space between name and note title
+
+          // Note Title Section - Centered
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Text(
+              note["title"],
+              style: const TextStyle(
+                fontSize: 32.0, // Slightly smaller but still prominent title
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                decoration: TextDecoration.none,
+              ),
+              textAlign: TextAlign.center, // Center-align the title
+            ),
+          ),
+
+          const SizedBox(height: 15), // Space between title and note text
+
+          // Note Body Section - Centered
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Text(
+              note["note"],
+              style: const TextStyle(
+                fontSize: 18.0, // Slightly smaller font size for note body
+                fontWeight: FontWeight.w400,
+                color: Colors.black54, // Softer color for body text
+                decoration: TextDecoration.none,
+                height: 1.4, // Adjust line height for better readability
+              ),
+              textAlign: TextAlign.center, // Center-align the note content
+            ),
+          ),
+          
+          const Spacer(), // Pushes the content upwards
+
+          // Bottom Padding
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20.0), // Bottom space
+            child: Center(
+              child: Container(
+                height: 5.0,
+                width: 50.0,
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  },
+);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: note["creator"] == ph ? Colors.blue.withOpacity(0.8)  : Colors.purple.withOpacity(0.7),
+                    shape: BoxShape.circle,
                   ),
                   Expanded(
                     child: Container(),

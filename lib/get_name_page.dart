@@ -25,9 +25,8 @@ class _GetNamePageState extends State<GetNamePage> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFFFFD580),  // Light sunset yellow
-              Color(0xFFFDA65A),  // Sunset orange
-              Color(0xFFF06D55)   // Deep sunset peach
+              Color(0xFFFFD580), // Light sunset yellow
+              Color(0xFFFDA65A), // Sunset orange
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -44,7 +43,7 @@ class _GetNamePageState extends State<GetNamePage> {
                 const SizedBox(height: 48),
                 const Text("Enter Your Name", 
                   style: TextStyle(
-                    color: Colors.white, 
+                    color: Color.fromARGB(222, 57, 32, 15), 
                     fontSize: 24, 
                     fontWeight: FontWeight.bold,
                   ),
@@ -53,12 +52,13 @@ class _GetNamePageState extends State<GetNamePage> {
                 TextField(
                   controller: _nameController,
                   keyboardType: TextInputType.name,
-                  style: const TextStyle(color: Colors.white),
+                  cursorColor: const Color.fromARGB(222, 57, 32, 15),
+                  style: const TextStyle(color: Color.fromARGB(222, 57, 32, 15)),
                   decoration: InputDecoration(
                     hintText: "Name",
-                    hintStyle: const TextStyle(color: Colors.white70),
+                    hintStyle: const TextStyle(color: const Color.fromARGB(222, 134, 109, 91)),
                     filled: true,
-                    fillColor: Colors.white24,
+                    fillColor: Color.fromARGB(92, 255, 246, 235),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -69,7 +69,7 @@ class _GetNamePageState extends State<GetNamePage> {
                 ElevatedButton(
                   onPressed: _submitName,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFB7268),  // Warm sunset peach
+                    backgroundColor: const Color.fromARGB(255, 201, 121, 78),  // Warm sunset peach
                     padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

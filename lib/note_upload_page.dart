@@ -164,11 +164,11 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFFF8E7), // Light sunset background
       body: GestureDetector(
         behavior: HitTestBehavior.translucent, // Allow tap outside to dismiss keyboard
         onTap: () {
-          FocusScope.of(context).unfocus();
+          FocusScope.of(context).unfocus(); // Dismiss the keyboard when tapping outside
         },
         child: SafeArea(
           bottom: false,
@@ -243,6 +243,99 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
                               fontSize: 16,
                             ),
                           ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Title Input
+                CupertinoTextField(
+                  cursorColor: const Color.fromARGB(222, 57, 32, 15),
+                  controller: titleController,
+                  placeholder: "Title",
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                  placeholderStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.grey,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12.0),
+                    color: const Color.fromARGB(92, 255, 246, 235),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Note Input Field
+                CupertinoTextField(
+                                    cursorColor: const Color.fromARGB(222, 57, 32, 15),
+
+                  controller: noteController,
+                  placeholder: "Note",
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                  placeholderStyle: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                  maxLines: null, // Allow multiple lines
+                  expands: true, // Allow the text field to expand vertically
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12.0),
+                    color: const Color.fromARGB(92, 255, 246, 235),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Save Note Button (with updated color to match the login page)
+                SizedBox(
+                  width: double.infinity,
+                  child: CupertinoButton(
+                    onPressed: _saveNote,
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    color: const Color(0xFFC9794E), // Warm sunset peach
+                    child: const Text(
+                      "Save Note",
+                      style: TextStyle(
+                        color: Color(0xFFFFFFFF),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 40), // Add spacing to move the camera icon lower
+
+                // Floating Action Button for Camera (closer to the bottom)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 30.0), // Closer to the bottom
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: SizedBox(
+                      width: 70, // Slightly smaller button
+                      height: 70,
+                      child: FloatingActionButton(
+                        onPressed: _openCamera,
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 35,
+                          color: Colors.white,
+                        ),
+                        backgroundColor: const Color.fromARGB(255, 77, 40, 24),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(35),
                         ),
                       ),
                     ),
