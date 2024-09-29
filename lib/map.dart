@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter/animation.dart';
@@ -9,6 +10,7 @@ import 'package:latlong2/latlong.dart' as l;
 
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<List> getNotesWithinRadius(
   double centerLat,
@@ -33,6 +35,10 @@ Future<List> getNotesWithinRadius(
   // Build the query with range filters
   final d = await FirebaseFirestore.instance
       .collection('notes').get(); // Replace with your collection name
+      // .where('note.latitude', isGreaterThanOrEqualTo: minLat)
+      // .where('note.latitude', isLessThanOrEqualTo: maxLat)
+      // .where('note.longitude', isGreaterThanOrEqualTo: minLon)
+      // .where('note.longitude', isLessThanOrEqualTo: maxLon);
 
   final ans = [];
 
@@ -47,8 +53,29 @@ Future<List> getNotesWithinRadius(
     }
   }
 
+  // // Execute the query
+  // QuerySnapshot querySnapshot = await query.get();
+
+  // List<DocumentSnapshot> documentsWithinRadius = [];
+
+  // // Iterate over the results and calculate distances
+  // for (var doc in querySnapshot.docs) {
+  //   GeoPoint noteLocation = doc['note'];
+  //   double noteLat = noteLocation.latitude;
+  //   double noteLon = noteLocation.longitude;
+
+  //   double distanceInMeters = calculateDistance(centerLat, centerLon, noteLat, noteLon);
+
+  //   // Include documents within the specified radius
+  //   if (distanceInMeters <= radiusInMeters) {
+  //     documentsWithinRadius.add(doc);
+  //   }
+  // }
+
   return ans;
 }
+
+
 
 // Haversine formula to calculate the great-circle distance between two points
 double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -79,18 +106,18 @@ class MainMap extends StatefulWidget {
   @override
   State<MainMap> createState() => _MainMapState();
 }
-
 class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   Position? _currentPosition;
   String _locationStatus = 'Location not available';
 
   final MapController mapController = MapController();
   l.LatLng _currentCenter = const l.LatLng(51.509364, -0.128929);
-  double _currentZoom = 9.2;
-  double _currentRotation = 0.0; // Track current rotation
-  final double _defaultZoom = 16.5; // Default zoom level when centering
+  double _currentZoom = 20.0;
+  final double _defaultZoom = 20; // Default zoom level when centering
 
   AnimationController? _mapAnimationController;
+  Animation<l.LatLng>? _latLngAnimation;
+  Animation<double>? _zoomAnimation;
 
   List<Marker> markers = [];
 
@@ -154,38 +181,36 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     });
     _checkLocationPermission().then((_) {
       debugPrint("LOCATION STATUS: $_locationStatus");
-
+      
       setState(() {
-        markers = markers
-          ..add(
-            Marker(
-              point: l.LatLng(
-                _currentPosition!.latitude,
-                _currentPosition!.longitude,
-              ),
-              width: 40.0,
-              height: 40.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.7),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.my_location,
-                    color: Colors.white,
-                    size: 20.0,
-                  ),
-                ),
-              ),
+        markers = markers..add(
+          Marker(
+        point: l.LatLng(
+          _currentPosition!.latitude,
+          _currentPosition!.longitude,
+        ),
+        width: 20.0,
+        height: 20.0,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.blue.withOpacity(0.7),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Icon(
+              Icons.my_location,
+              color: Colors.white,
+              size: 20.0,
             ),
-          );
+          ),
+        ),
+      )
+        );
       });
     });
   }
 
-  void _animateMapMovement(l.LatLng destCenter, double destZoom,
-      {double destRotation = 0.0, int duration = 700}) {
+  void _animateMapMovement(l.LatLng destCenter, double destZoom, {int duration = 700}) {
     // Dispose of any previous animation controller
     _mapAnimationController?.dispose();
 
@@ -204,10 +229,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       end: destZoom,
     );
 
-    final rotationTween = Tween<double>(
-      begin: _currentRotation,
-      end: destRotation,
-    );
     _mapAnimationController = AnimationController(
       duration: Duration(milliseconds: duration),
       vsync: this,
@@ -217,22 +238,20 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       final lat = latTween.evaluate(_mapAnimationController!);
       final lng = lngTween.evaluate(_mapAnimationController!);
       final zoom = zoomTween.evaluate(_mapAnimationController!);
-      final rotation = rotationTween.evaluate(_mapAnimationController!);
 
-      mapController.moveAndRotate(
+      mapController.move(
         l.LatLng(lat, lng),
         zoom,
-        rotation,
       );
     });
 
     _mapAnimationController!.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        _currentRotation = destRotation; // Update current rotation
         _mapAnimationController?.dispose();
         _mapAnimationController = null;
       }
     });
+
     _mapAnimationController!.forward();
   }
 
@@ -333,6 +352,33 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     // Create a list of markers
+    // If the current position is available, add a marker at that location
+    if (_currentPosition != null) {
+
+      // markers.add(
+      //   Marker(
+      //     point: l.LatLng(
+      //       37.786210,
+      //       -122.402530
+      //     ),
+      //     width: 40.0,
+      //     height: 40.0,
+      //     child: Container(
+      //       decoration: BoxDecoration(
+      //         color: Colors.red.withOpacity(0.7),
+      //         shape: BoxShape.circle,
+      //       ),
+      //       child: Center(
+      //         child: Icon(
+      //           Icons.my_location,
+      //           color: Colors.white,
+      //           size: 20.0,
+      //         ),
+      //       ),
+      //     ),
+      //   ),
+      // );
+    }
 
     return Stack(
       children: [
@@ -341,14 +387,12 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
           options: MapOptions(
             initialCenter: _currentCenter,
             initialZoom: _currentZoom,
-            initialRotation: _currentRotation,
             crs: const Epsg3857(),
             onMapEvent: (MapEvent mapEvent) {
               setState(() {
-                // Update current center, zoom, and rotation from mapEvent
+                // Update current center and zoom from mapEvent
                 _currentCenter = mapEvent.camera.center;
                 _currentZoom = mapEvent.camera.zoom;
-                _currentRotation = mapEvent.camera.rotation;
               });
             },
           ),
@@ -377,8 +421,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                 onPressed: () {
                   setState(() {
                     final destZoom = _currentZoom + 1;
-                    _animateMapMovement(_currentCenter, destZoom,
-                        destRotation: _currentRotation, duration: 500);
+                    _animateMapMovement(_currentCenter, destZoom, duration: 500);
                     _currentZoom = destZoom;
                   });
                 },
@@ -391,8 +434,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                 onPressed: () {
                   setState(() {
                     final destZoom = _currentZoom - 1;
-                    _animateMapMovement(_currentCenter, destZoom,
-                        destRotation: _currentRotation, duration: 500);
+                    _animateMapMovement(_currentCenter, destZoom, duration: 500);
                     _currentZoom = destZoom;
                   });
                 },
@@ -400,7 +442,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
             ],
           ),
         ),
-        // Center and rotate button at the bottom middle
+        // Center button at the bottom middle
         Positioned(
           bottom: 20,
           left: MediaQuery.of(context).size.width / 2 - 25, // Adjust position
@@ -415,11 +457,9 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                   _currentPosition!.longitude,
                 );
                 setState(() {
-                  _animateMapMovement(destCenter, _defaultZoom,
-                      destRotation: 0.0); // Rotate back to north
+                  _animateMapMovement(destCenter, _defaultZoom);
                   _currentCenter = destCenter;
                   _currentZoom = _defaultZoom;
-                  _currentRotation = 0.0;
                 });
               } else {
                 // Optionally handle the case when the current position is not available
@@ -430,6 +470,11 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
         ),
       ],
     );
+  }
+
+  bool closeEnough(double lat1, double lon1, double lat2, double lon2){
+    final double minDistance = 0.001;
+    return sqrt((lat1 - lat2) * (lat1 - lat2) + (lon1 - lon2) * (lon1 - lon2)) < minDistance;
   }
 
   Future<void> _getCurrentLocation() async {
@@ -450,6 +495,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
       setState(() {
         _currentPosition = position;
+        //_animateMapMovement(destCenter, destZoom);
         _currentCenter = destCenter;
         _currentZoom = destZoom;
         _locationStatus =
@@ -458,38 +504,44 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
       debugPrint('Location: ${position.latitude}, ${position.longitude}');
 
-      final notes =
-          await getNotesWithinRadius(position.latitude, position.longitude, 100000000);
-      for (final note in notes) {
-        debugPrint("Here!!");
-        debugPrint("${note["location"].latitude} ${note["location"].longitude}");
-        setState(() {
-          markers = markers
-            ..add(
-              Marker(
+      final notes = await getNotesWithinRadius(position.latitude, position.longitude, 100000000);
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? ph = prefs.getString("phone-number");
+
+      for (final note in notes){
+        try{
+          debugPrint("Here!!");
+          debugPrint("${note["location"].latitude} ${note["location"].longitude}");
+          double clat = note["location"].latitude;
+          double clon = note["location"].longitude;
+          String name = "Unknown";
+          if (closeEnough(clat, clon, position.latitude, position.longitude)){
+            debugPrint("CLOSE: ${note["creator"]}");
+            final d = await FirebaseFirestore.instance.collection("users").where("phoneNumber", isEqualTo: note["creator"]).get();
+            if (d.docs.isNotEmpty){
+              debugPrint("GG");
+              name = d.docs[0].get("name");
+            }
+          }
+
+          setState(() {
+            markers = markers..insert(0,
+            Marker(
                 point: l.LatLng(
-                  note["location"].latitude,
-                  note["location"].longitude,
+                  clat,
+                  clon,
                 ),
                 width: 40.0,
                 height: 40.0,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.7),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.edit_document,
-                      color: Colors.white,
-                      size: 20.0,
-                    ),
-                  ),
-                ),
                 child: _notePopup(clat, clon, position, name, note, ph),
               ),
             );
-        });
+          });
+        }
+        catch(e){
+          debugPrint("Failed to load note: $e");
+        }
       }
 
     } catch (e) {
