@@ -22,6 +22,7 @@ dependencies:
   twilio_flutter: ^0.9.0
   google_fonts: ^6.2.1
   image_picker: ^0.8.4+10
+  image_cropper: ^8.0.2
   photo_manager: ^3.5.0
   location: ^6.0.2
 

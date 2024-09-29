@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io'; // Needed for working with files
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -5,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; // Import image picker
-import 'package:photo_manager/photo_manager.dart'; // Import photo_manager for gallery access
+import 'package:image_cropper/image_cropper.dart'; // Import image cropper
 
 class NoteUploadPage extends StatefulWidget {
   const NoteUploadPage({super.key});
@@ -18,60 +19,25 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
   TextEditingController titleController = TextEditingController();
   TextEditingController noteController = TextEditingController(); // Controller for the note
   File? _image; // This will hold the selected image
+  final ImagePicker _picker = ImagePicker(); // Initialize ImagePicker
   String _locationStatus = 'Location not available';
+  double? _imageAspectRatio; // Store the image's aspect ratio
 
   @override
   void initState() {
     super.initState();
-    // Attempt to load the first image from the gallery if no image has been taken
-    _loadFirstGalleryImage();
-  }
-
-  // Function to load the first image from the gallery
-  Future<void> _loadFirstGalleryImage() async {
-    try {
-      // Request permission to access the gallery
-      final PermissionState ps = await PhotoManager.requestPermissionExtend();
-      if (ps.isAuth) {
-        // Access the gallery and get the first image
-        List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
-          onlyAll: true,
-          type: RequestType.image,
-        );
-        if (albums.isNotEmpty) {
-          List<AssetEntity> photos = await albums[0].getAssetListRange(
-            start: 0,
-            end: 1, // We only need the first image
-          );
-          if (photos.isNotEmpty) {
-            File? file = await photos[0].file;
-            if (file != null) {
-              setState(() {
-                _image = file;
-              });
-            }
-          }
-        }
-      } else {
-        // Handle the case when permission is denied
-        debugPrint("Permission to access gallery denied.");
-      }
-    } catch (e) {
-      debugPrint("Error loading gallery image: $e");
-    }
   }
 
   // Function to open the camera
   Future<void> _openCamera() async {
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? pickedFile =
-          await picker.pickImage(source: ImageSource.camera);
+      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
 
       if (pickedFile != null) {
-        setState(() {
-          _image = File(pickedFile.path); // Store the image as a File
-        });
+        File? croppedFile = await _cropImage(File(pickedFile.path));
+        if (croppedFile != null) {
+          await _setImageAndAspectRatio(croppedFile);
+        }
       } else {
         debugPrint("No image captured.");
       }
@@ -83,14 +49,13 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
   // Function to pick an image from the gallery
   Future<void> _pickImageFromGallery() async {
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? pickedFile =
-          await picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
       if (pickedFile != null) {
-        setState(() {
-          _image = File(pickedFile.path); // Store the image as a File
-        });
+        File? croppedFile = await _cropImage(File(pickedFile.path));
+        if (croppedFile != null) {
+          await _setImageAndAspectRatio(croppedFile);
+        }
       } else {
         debugPrint("No image selected.");
       }
@@ -99,16 +64,64 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
     }
   }
 
+  // Function to crop the image
+  Future<File?> _cropImage(File imageFile) async {
+    try {
+      CroppedFile? croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Image',
+            toolbarColor: Colors.blue,
+            toolbarWidgetColor: Colors.white,
+            lockAspectRatio: false,
+          ),
+          IOSUiSettings(
+            title: 'Crop Image',
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        return File(croppedFile.path);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Error cropping image: $e");
+      return null;
+    }
+  }
+
+  // Function to set the image and calculate its aspect ratio
+  Future<void> _setImageAndAspectRatio(File imageFile) async {
+    final Completer<Size> completer = Completer<Size>();
+
+    Image image = Image.file(imageFile);
+    image.image.resolve(const ImageConfiguration()).addListener(
+      ImageStreamListener((ImageInfo info, bool _) {
+        var myImageWidth = info.image.width.toDouble();
+        var myImageHeight = info.image.height.toDouble();
+        completer.complete(Size(myImageWidth, myImageHeight));
+      }),
+    );
+
+    final Size imageSize = await completer.future;
+    setState(() {
+      _image = imageFile;
+      _imageAspectRatio = imageSize.width / imageSize.height;
+    });
+  }
+
   Future<void> _saveNote() async {
     try {
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        desiredAccuracy: LocationAccuracy.best,
       );
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? ph = prefs.getString("phone-number");
 
-      // TODO: Implement image upload to cloud storage (e.g., Firebase Storage)
-      // For now, we'll assume the image URL is obtained after upload
+      // Upload the image if present, otherwise skip
       String? imageUrl;
       if (_image != null) {
         imageUrl = await _uploadImage(_image!);
@@ -119,7 +132,7 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
         "creator": ph ?? "Unknown",
         "location": GeoPoint(position.latitude, position.longitude),
         "title": titleController.text,
-        "image": imageUrl, // Save the image URL
+        if (imageUrl != null) "image": imageUrl, // Save the image URL only if there is an image
       });
 
       Navigator.of(context).pop();
@@ -140,164 +153,171 @@ class _NoteUploadPageState extends State<NoteUploadPage> {
     return "https://example.com/image.jpg";
   }
 
+  // Remove the selected image
+  void _removeImage() {
+    setState(() {
+      _image = null;
+      _imageAspectRatio = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Calculate the height for the image (30% of screen height)
-    double imageHeight = MediaQuery.of(context).size.height * 0.3;
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: GestureDetector(
         behavior: HitTestBehavior.translucent, // Allow tap outside to dismiss keyboard
-        // Dismiss the keyboard when tapping outside
         onTap: () {
           FocusScope.of(context).unfocus();
         },
         child: SafeArea(
           bottom: false,
-          child: LayoutBuilder( // Use LayoutBuilder to adjust based on screen size
-            builder: (context, constraints) {
-              return SingleChildScrollView( // Enable scrolling to prevent overflow
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight,
+          child: Column( // Replaced with a simple Column for better expanding
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Back button
+              Row(
+                children: [
+                  const SizedBox(width: 5),
+                  CupertinoButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Icon(CupertinoIcons.chevron_back,
+                        size: 40.0, color: Colors.black),
                   ),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                  Expanded(child: Container()),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // Display the selected image or placeholder
+              _image != null && _imageAspectRatio != null
+                  ? Stack(
+                      clipBehavior: Clip.none,
+                      alignment: Alignment.topCenter,
                       children: [
-                        // Back button
-                        Row(
-                          children: [
-                            const SizedBox(width: 5),
-                            CupertinoButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Icon(CupertinoIcons.chevron_back,
-                                  size: 40.0, color: Colors.black),
-                            ),
-                            Expanded(child: Container()),
-                          ],
-                        ),
-                        // Display the captured image if available
-                        GestureDetector(
-                          onTap: _pickImageFromGallery,
-                          child: Container(
-                            height: imageHeight,
-                            width: MediaQuery.of(context).size.width * 0.8, // 80% of the screen width
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12.0), // Rounded corners
-                              color: Colors.grey.shade200, // Placeholder background color
-                            ),
-                            child: _image != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(12.0),
-                                    child: Image.file(
-                                      _image!,
-                                      fit: BoxFit.cover,
-                                      alignment: Alignment.topCenter, // Align top of the image
-                                    ),
-                                  )
-                                : Center(
-                                    child: Text(
-                                      'Tap to select an image',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        // Title input
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: CupertinoTextField(
-                            controller: titleController,
-                            placeholder: "Title",
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 10),
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            placeholderStyle: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w300,
-                              color: Colors.grey,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
+                        FractionallySizedBox(
+                          widthFactor: 0.8,
+                          child: AspectRatio(
+                            aspectRatio: _imageAspectRatio!,
+                            child: ClipRRect(
                               borderRadius: BorderRadius.circular(12.0),
+                              child: Image.file(
+                                _image!,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        // Note input widget
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: CupertinoTextField(
-                            controller: noteController,
-                            placeholder: "Note",
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 10),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.black,
-                            ),
-                            placeholderStyle: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
-                            maxLines: null, // Allow multiple lines
-                            expands: true, // Allow the text field to expand vertically
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                          ),
-                        ),
-                        // Save Button
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0, vertical: 10),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: CupertinoButton.filled(
-                              onPressed: _saveNote,
-                              child: const Text('Save Note'),
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 20.0),
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: SizedBox(
-                              width: 70, // Slightly smaller button
-                              height: 70,
-                              child: FloatingActionButton(
-                                onPressed: _openCamera,
-                                child: const Icon(Icons.camera_alt,
-                                    size: 35, color: Colors.white), // Adjusted icon size
-                                backgroundColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(35),
-                                ),
+                        Positioned(
+                          top: -10,
+                          right: 32,
+                          child: GestureDetector(
+                            onTap: _removeImage,
+                            child: CircleAvatar(
+                              radius: 15,
+                              backgroundColor: Colors.black.withOpacity(0.6),
+                              child: const Icon(
+                                Icons.close,
+                                size: 18,
+                                color: Colors.white,
                               ),
                             ),
                           ),
                         ),
                       ],
+                    )
+                  : GestureDetector(
+                      onTap: _pickImageFromGallery,
+                      child: Container(
+                        height: MediaQuery.of(context).size.height * 0.3,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12.0),
+                          color: Colors.grey.shade200,
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Tap to select an image',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+              const SizedBox(height: 10),
+              // Expanded note input widget to take up the remaining space
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.yellow[100], // Light yellow background for the note box
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: CupertinoTextField(
+                      controller: noteController,
+                      placeholder: "write here", // Updated placeholder
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 15, horizontal: 10),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                      placeholderStyle: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                      maxLines: null, // Allow multiple lines
+                      expands: true, // Allow the text field to expand vertically
+                      decoration: const BoxDecoration(), // No default Cupertino decoration
                     ),
                   ),
                 ),
-              );
-            },
+              ),
+              // Save Note Button
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 10),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: CupertinoButton(
+                    onPressed: _saveNote,
+                    color: Colors.orangeAccent[100], // Pastel orange button color
+                    padding: const EdgeInsets.symmetric(vertical: 15.0),
+                    child: const Text(
+                      'Save Note',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, // Bold text
+                        color: Colors.white, // White text color
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: SizedBox(
+                    width: 70,
+                    height: 70,
+                    child: FloatingActionButton(
+                      onPressed: _openCamera,
+                      child: const Icon(Icons.camera_alt,
+                          size: 35, color: Colors.white),
+                      backgroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(35),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
