@@ -16,6 +16,7 @@ class _SettingsPageState extends State<SettingsPage> {
   File? _avatarImage;
   final ImagePicker _picker = ImagePicker();
 
+  // Function to pick and crop the avatar image
   Future<void> _pickAndCropImage() async {
     try {
       final XFile? pickedFile =
@@ -43,6 +44,7 @@ class _SettingsPageState extends State<SettingsPage> {
           setState(() {
             _avatarImage = File(croppedFile.path);
           });
+          // Here you might want to upload the avatar to a server or save it locally
         }
       }
     } catch (e) {
@@ -63,7 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           // Gradient background for the entire screen
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   Color(0xFFFFD580), // Light sunset yellow
@@ -86,7 +88,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              iconTheme: IconThemeData(
+              iconTheme: const IconThemeData(
                 color: Color.fromARGB(222, 57, 32, 15), // Set the back arrow color
               ),
               backgroundColor: Colors.transparent, // Transparent AppBar
@@ -97,13 +99,18 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  // Profile Picture
+                  // Profile Picture Section
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundImage: NetworkImage(
-                            'https://via.placeholder.com/150'), // Replace with your image URL
+                      GestureDetector(
+                        onTap: _pickAndCropImage,
+                        child: CircleAvatar(
+                          radius: 40,
+                          backgroundImage: _avatarImage != null
+                              ? FileImage(_avatarImage!) as ImageProvider
+                              : const NetworkImage(
+                                  'https://via.placeholder.com/150'), // Replace with your default image URL
+                        ),
                       ),
                       const SizedBox(width: 16),
                       const Text(
@@ -128,7 +135,6 @@ class _SettingsPageState extends State<SettingsPage> {
                           color: Color.fromARGB(222, 57, 32, 15),
                           fontSize: 20,
                         ),
-                        textAlign: TextAlign.center,
                       ),
                       Switch(
                         value: _exclusiveFriends,
@@ -137,16 +143,17 @@ class _SettingsPageState extends State<SettingsPage> {
                             _exclusiveFriends = value;
                           });
                         },
-                        activeColor: Color.fromARGB(222, 57, 32, 15),
+                        activeColor: const Color.fromARGB(222, 57, 32, 15),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Divider(color: Color.fromARGB(222, 57, 32, 15)), // Divider for toggle section
+                  const Divider(color: Color.fromARGB(222, 57, 32, 15)),
 
                   // Additional Settings
                   ListTile(
-                    leading: const Icon(Icons.notifications, color: Color.fromARGB(222, 57, 32, 15)),
+                    leading: const Icon(Icons.notifications,
+                        color: Color.fromARGB(222, 57, 32, 15)),
                     title: const Text('Notifications',
                         style: TextStyle(color: Color.fromARGB(222, 57, 32, 15))),
                     onTap: () {
@@ -158,20 +165,22 @@ class _SettingsPageState extends State<SettingsPage> {
                       );
                     },
                   ),
-                  const Divider(color: Color.fromARGB(222, 57, 32, 15)), // Divider for notifications
+                  const Divider(color: Color.fromARGB(222, 57, 32, 15)),
 
                   ListTile(
-                    leading: const Icon(Icons.lock, color: Color.fromARGB(222, 57, 32, 15)),
+                    leading:
+                        const Icon(Icons.lock, color: Color.fromARGB(222, 57, 32, 15)),
                     title: const Text('Privacy',
                         style: TextStyle(color: Color.fromARGB(222, 57, 32, 15))),
                     onTap: () {
                       // Implement privacy settings logic
                     },
                   ),
-                  const Divider(color: Color.fromARGB(222, 57, 32, 15)), // Divider for privacy
+                  const Divider(color: Color.fromARGB(222, 57, 32, 15)),
 
                   ListTile(
-                    leading: const Icon(Icons.help, color: Color.fromARGB(222, 57, 32, 15)),
+                    leading:
+                        const Icon(Icons.help, color: Color.fromARGB(222, 57, 32, 15)),
                     title: const Text('Help & Support',
                         style: TextStyle(color: Color.fromARGB(222, 57, 32, 15))),
                     onTap: () {
@@ -179,16 +188,17 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  // Logo Image
-                  
-                  const SizedBox(height: 100), // Spacing between logo and button
+
+                  // Spacer to push the logout button to the bottom
+                  Expanded(child: Container()),
 
                   // Log out button
                   ElevatedButton(
                     onPressed: _logout,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                      backgroundColor: Color.fromARGB(255, 201, 121, 78),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      backgroundColor: const Color.fromARGB(255, 201, 121, 78),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),

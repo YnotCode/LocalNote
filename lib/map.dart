@@ -89,13 +89,9 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   final MapController mapController = MapController();
   l.LatLng _currentCenter = const l.LatLng(51.509364, -0.128929);
   double _currentZoom = 20.0;
-  final double _defaultZoom = 20.0; // Default zoom level when centering
-  double _currentRotation = 0.0; // Track current rotation
-  bool _hasZoomedToCurrentLocation =
-      false; // Track if we've zoomed in on the user's location
+  final double _defaultZoom = 20; // Default zoom level when centering
 
   AnimationController? _mapAnimationController;
-
   List<Marker> markers = [];
 
   @override
@@ -111,13 +107,11 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     final coll = FirebaseFirestore.instance.collection("notes");
     coll.snapshots().listen((event) async {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-
       String ph = prefs.getString("phone-number") ?? "";
 
       for (int i = 0; i < event.docChanges.length; ++i) {
         try {
           final n = event.docChanges[i].doc.data() ?? {};
-
           double clat = n["location"].latitude;
           double clon = n["location"].longitude;
           String name = "Unknown";
@@ -140,19 +134,11 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
               ..insert(
                 0,
                 Marker(
-                  point: l.LatLng(
-                    n["location"].latitude,
-                    n["location"].longitude,
-                  ),
+                  point: l.LatLng(n?["location"].latitude, n?["location"].longitude),
                   width: 40.0,
                   height: 40.0,
-                  child: _notePopup(
-                      n["location"].latitude,
-                      n["location"].longitude,
-                      _currentPosition,
-                      name,
-                      n,
-                      ph),
+                  child: _notePopup(n?["location"].latitude,
+                      n?["location"].longitude, _currentPosition!, name, n, ph),
                 ),
               );
           });
@@ -161,17 +147,15 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
         }
       }
     });
+
     _checkLocationPermission().then((_) {
       debugPrint("LOCATION STATUS: $_locationStatus");
 
       setState(() {
-        if (_currentPosition != null) {
-          markers = markers
-            ..add(Marker(
-              point: l.LatLng(
-                _currentPosition!.latitude,
-                _currentPosition!.longitude,
-              ),
+        markers = markers
+          ..add(
+            Marker(
+              point: l.LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
               width: 20.0,
               height: 20.0,
               child: Container(
@@ -187,18 +171,14 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-            ));
-        }
+            ),
+          );
       });
     });
   }
 
-  void _animateMapMovement(
-    l.LatLng destCenter,
-    double destZoom, {
-    double destRotation = 0.0,
-    int duration = 700,
-  }) {
+  void _animateMapMovement(l.LatLng destCenter, double destZoom,
+      {int duration = 700}) {
     // Dispose of any previous animation controller
     _mapAnimationController?.dispose();
 
@@ -217,11 +197,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       end: destZoom,
     );
 
-    final rotationTween = Tween<double>(
-      begin: _currentRotation,
-      end: destRotation,
-    );
-
     _mapAnimationController = AnimationController(
       duration: Duration(milliseconds: duration),
       vsync: this,
@@ -231,18 +206,15 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       final lat = latTween.evaluate(_mapAnimationController!);
       final lng = lngTween.evaluate(_mapAnimationController!);
       final zoom = zoomTween.evaluate(_mapAnimationController!);
-      final rotation = rotationTween.evaluate(_mapAnimationController!);
 
-      mapController.moveAndRotate(
+      mapController.move(
         l.LatLng(lat, lng),
         zoom,
-        rotation,
       );
     });
 
     _mapAnimationController!.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        _currentRotation = destRotation; // Update current rotation
         _mapAnimationController?.dispose();
         _mapAnimationController = null;
       }
@@ -250,7 +222,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
     _mapAnimationController!.forward();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -260,14 +232,12 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
           options: MapOptions(
             initialCenter: _currentCenter,
             initialZoom: _currentZoom,
-            initialRotation: _currentRotation,
             crs: const Epsg3857(),
             onMapEvent: (MapEvent mapEvent) {
               setState(() {
-                // Update current center, zoom, and rotation from mapEvent
+                // Update current center and zoom from mapEvent
                 _currentCenter = mapEvent.camera.center;
                 _currentZoom = mapEvent.camera.zoom;
-                _currentRotation = mapEvent.camera.rotation;
               });
             },
           ),
@@ -296,12 +266,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                 onPressed: () {
                   setState(() {
                     final destZoom = _currentZoom + 1;
-                    _animateMapMovement(
-                      _currentCenter,
-                      destZoom,
-                      destRotation: _currentRotation,
-                      duration: 500,
-                    );
+                    _animateMapMovement(_currentCenter, destZoom, duration: 500);
                     _currentZoom = destZoom;
                   });
                 },
@@ -314,12 +279,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                 onPressed: () {
                   setState(() {
                     final destZoom = _currentZoom - 1;
-                    _animateMapMovement(
-                      _currentCenter,
-                      destZoom,
-                      destRotation: _currentRotation,
-                      duration: 500,
-                    );
+                    _animateMapMovement(_currentCenter, destZoom, duration: 500);
                     _currentZoom = destZoom;
                   });
                 },
@@ -342,17 +302,11 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
                   _currentPosition!.longitude,
                 );
                 setState(() {
-                  _animateMapMovement(
-                    destCenter,
-                    _defaultZoom,
-                    destRotation: 0.0,
-                  ); // Rotate back to north
+                  _animateMapMovement(destCenter, _defaultZoom);
                   _currentCenter = destCenter;
                   _currentZoom = _defaultZoom;
-                  _currentRotation = 0.0;
                 });
               } else {
-                // Optionally handle the case when the current position is not available
                 debugPrint('Current position not available');
               }
             },
@@ -363,7 +317,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
   }
 
   bool closeEnough(double lat1, double lon1, double lat2, double lon2) {
-    final double minDistance = 0.005;
+    final double minDistance = 0.001;
     return sqrt((lat1 - lat2) * (lat1 - lat2) + (lon1 - lon2) * (lon1 - lon2)) <
         minDistance;
   }
@@ -387,13 +341,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
 
       debugPrint('Location: ${position.latitude}, ${position.longitude}');
 
-      // If it's the first time we get the location, zoom in on the current location
-      if (!_hasZoomedToCurrentLocation) {
-        _animateMapMovement(destCenter, _defaultZoom, destRotation: 0.0);
-        _hasZoomedToCurrentLocation =
-            true; // Set flag to true to avoid zooming again
-      }
-
       final notes = await getNotesWithinRadius(
           position.latitude, position.longitude, 100000000);
 
@@ -403,8 +350,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       for (final note in notes) {
         try {
           debugPrint("Here!!");
-          debugPrint(
-              "${note["location"].latitude} ${note["location"].longitude}");
+          debugPrint("${note["location"].latitude} ${note["location"].longitude}");
           double clat = note["location"].latitude;
           double clon = note["location"].longitude;
           String name = "Unknown";
@@ -425,10 +371,7 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
               ..insert(
                 0,
                 Marker(
-                  point: l.LatLng(
-                    clat,
-                    clon,
-                  ),
+                  point: l.LatLng(clat, clon),
                   width: 40.0,
                   height: 40.0,
                   child: _notePopup(clat, clon, position, name, note, ph),
@@ -446,168 +389,108 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
     }
   }
 
-  CupertinoButton _notePopup(double clat, double clon, Position? position,
-      String name, dynamic note, String? ph) {
+  CupertinoButton _notePopup(double clat, double clon, Position position,
+      String name, note, String? ph) {
     return CupertinoButton(
-                padding: EdgeInsets.zero,
-                minSize: 0.0,
-                onPressed: (){
-                  if (!closeEnough(clat, clon, position.latitude, position.longitude)){
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(
-                        "Too far away"
-                      ))
-                    );
-                    return;
-                  }
-                  showCupertinoModalPopup(
-  context: context,
-  builder: (context) {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height * 0.8,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95), // Slightly stronger opacity for better readability
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)), // Rounded top corners
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center, // Centers the content horizontally
-        children: [
-          const SizedBox(height: 20), // Adjusted top padding for more space
-          
-          // Close Icon Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SizedBox(width: 10.0),
-              CupertinoButton(
-                onPressed: () => Navigator.pop(context),
-                child: Icon(
-                  CupertinoIcons.xmark,
-                  size: 30.0, // Larger close icon for better visibility
-                  color: Colors.black54, // Slightly subdued color for icon
-                ),
+      padding: EdgeInsets.zero,
+      minSize: 0.0,
+      onPressed: () {
+        if (!closeEnough(clat, clon, position.latitude, position.longitude)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Too far away")),
+          );
+          return;
+        }
+        showCupertinoModalPopup(
+          context: context,
+          builder: (context) {
+            return Container(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height * 0.8,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.95),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
               ),
-              Expanded(child: Container()),
-            ],
-          ),
-          
-          const SizedBox(height: 20), // Space between the close button and content
-          
-          // Profile or Name Section - Centered
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Text(
-              'from ${name}',
-              style: const TextStyle(
-                fontSize: 22.0,
-                fontWeight: FontWeight.bold, // Bold for emphasis
-                color: Colors.black87,
-                decoration: TextDecoration.none,
-              ),
-              textAlign: TextAlign.center, // Center-align the name
-            ),
-          ),
-          
-          const SizedBox(height: 30), // More space between name and note title
-
-          // Note Title Section - Centered
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Text(
-              note["title"],
-              style: const TextStyle(
-                fontSize: 32.0, // Slightly smaller but still prominent title
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-                decoration: TextDecoration.none,
-              ),
-              textAlign: TextAlign.center, // Center-align the title
-            ),
-          ),
-
-          const SizedBox(height: 15), // Space between title and note text
-
-          // Note Body Section - Centered
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Text(
-              note["note"],
-              style: const TextStyle(
-                fontSize: 18.0, // Slightly smaller font size for note body
-                fontWeight: FontWeight.w400,
-                color: Colors.black54, // Softer color for body text
-                decoration: TextDecoration.none,
-                height: 1.4, // Adjust line height for better readability
-              ),
-              textAlign: TextAlign.center, // Center-align the note content
-            ),
-          ),
-          
-          const Spacer(), // Pushes the content upwards
-
-          // Bottom Padding
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20.0), // Bottom space
-            child: Center(
-              child: Container(
-                height: 5.0,
-                width: 50.0,
-                decoration: BoxDecoration(
-                  color: Colors.black12,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  },
-);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: note["creator"] == ph ? Colors.blue.withOpacity(0.8)  : Colors.purple.withOpacity(0.7),
-                    shape: BoxShape.circle,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  // Close Icon Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SizedBox(width: 10.0),
+                      CupertinoButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Icon(
+                          CupertinoIcons.xmark,
+                          size: 30.0,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      Expanded(child: Container()),
+                    ],
                   ),
-                  Expanded(
-                    child: Container(),
-                  ),
+                  const SizedBox(height: 20),
+                  // Profile or Name Section - Centered
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(name,
-                            style: const TextStyle(
-                                fontSize: 25.0,
-                                fontWeight: FontWeight.normal,
-                                color: Colors.black,
-                                decoration: TextDecoration.none)),
-                      ],
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Text(
+                      'from $name',
+                      style: const TextStyle(
+                        fontSize: 22.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                        decoration: TextDecoration.none,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(height: 50),
-                  Text(note["title"],
+                  const SizedBox(height: 30),
+                  // Note Title Section - Centered
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Text(
+                      note["title"],
                       style: const TextStyle(
-                          fontSize: 40.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          decoration: TextDecoration.none)),
-                  const SizedBox(height: 10),
-                  Text(note["note"],
-                      style: const TextStyle(
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                          decoration: TextDecoration.none)),
-                  Expanded(
-                    child: Container(),
+                        fontSize: 32.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                        decoration: TextDecoration.none,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  Expanded(
-                    child: Container(),
-                  )
+                  const SizedBox(height: 15),
+                  // Note Body Section - Centered
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Text(
+                      note["note"],
+                      style: const TextStyle(
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.black54,
+                        decoration: TextDecoration.none,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: Center(
+                      child: Container(
+                        height: 5.0,
+                        width: 50.0,
+                        decoration: BoxDecoration(
+                          color: Colors.black12,
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -645,7 +528,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       setState(() {
         _locationStatus = 'Location services are disabled.';
         _currentPosition = null;
-        // Move to default position
         _animateMapMovement(destCenter, _defaultZoom);
         _currentZoom = _defaultZoom;
       });
@@ -660,7 +542,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
         setState(() {
           _locationStatus = 'Location permission denied';
           _currentPosition = null;
-          // Move to default position
           _animateMapMovement(destCenter, _defaultZoom);
           _currentZoom = _defaultZoom;
         });
@@ -672,7 +553,6 @@ class _MainMapState extends State<MainMap> with TickerProviderStateMixin {
       setState(() {
         _locationStatus = 'Location permissions are permanently denied.';
         _currentPosition = null;
-        // Move to default position
         _animateMapMovement(destCenter, _defaultZoom);
         _currentZoom = _defaultZoom;
       });
