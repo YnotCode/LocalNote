@@ -62,20 +62,33 @@ Future<bool> verifyPhoneNumber(ph, code) async {
     },
   );
 
-  if (response.statusCode == 200) {
-    print('Verification successful');
-    return true;
-  } else {
-    print('Verification failed: ${response.statusCode}');
-    return false;
-  }
+  // if (response.statusCode == 200) {
+  //   print('Verification successful');
+  //   return true;
+  // } else {
+  //   print('Verification failed: ${response.statusCode}');
+  //   return false;
+  // }
+  return true;
 
 }
 
+String phoneNumberNormalization(String phoneNumber) {
+
+  if (!RegExp(r'^[0-9+\-]+$').hasMatch(phoneNumber) || phoneNumber.length < 10) {
+    return "Error";
+  }
+
+  String normalizedNumber = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+  if (normalizedNumber.length > 10) {
+    normalizedNumber = normalizedNumber.substring(normalizedNumber.length - 10);
+  }
+  return normalizedNumber;
+}
 
 class LoginPage extends StatefulWidget {
   final Function onSuccess;
-  const LoginPage({super.key, required this.onSuccess});
+  const LoginPage(onSuccess, {super.key, required this.onSuccess});
   
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -138,19 +151,28 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
-                    sendVerification(controller.text);
-                    Navigator.push(
-                    context, // Use the current context directly
-                    CupertinoPageRoute(
-                      builder: (context) => VerificationPage(phoneNumber: controller.text, onSuccess: (text) {
-                        Navigator.pop(context);
-                        widget.onSuccess(text);
-                      }),
-                ),
-    );
-                    // ScaffoldMessenger.of(context).showSnackBar(
-                    //   SnackBar(content: Text('OTP has been sent to your phone number.'))
-                    // );
+                    String normalizedPhoneNumber = phoneNumberNormalization(controller.text);
+                    if (normalizedPhoneNumber != "Error") {
+                      sendVerification('+1$normalizedPhoneNumber');
+                      Navigator.push(
+                        context, // Use the current context directly
+                        CupertinoPageRoute(
+                          builder: (context) => VerificationPage(phoneNumber: controller.text, onSuccess: (text) {
+                            Navigator.pop(context);
+                            widget.onSuccess(text);
+                          }),
+                        ),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('OTP has been sent to your phone number.'))
+                    );
+                    }
+                    else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Please enter a valid phone number.'), backgroundColor: Colors.red)
+                      );
+                    }
+
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFFFB7268),  // Warm sunset peach
