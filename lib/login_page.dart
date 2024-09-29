@@ -185,7 +185,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   controller: otpController,
-                  obscureText: true,
                 ),
                 SizedBox(height: 32),
                 ElevatedButton(

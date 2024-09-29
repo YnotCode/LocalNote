@@ -11,12 +11,14 @@ import 'package:local_note_2/login_page.dart';
 import 'package:local_note_2/map.dart';
 // import 'package:local_note_2/map.dart';
 import 'package:local_note_2/note_upload_page.dart';
+import 'package:local_note_2/setting_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'note_upload.dart';
 import 'friends.dart';
+import 'setting_page.dart';
 
 void main() async {
-  // SharedPreferences.setMockInitialValues({});
+  //SharedPreferences.setMockInitialValues({});
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -41,6 +43,7 @@ class _MainAppState extends State<MainApp> {
     // TODO: implement initState
     SharedPreferences.getInstance().then((prefs){
       String? x = prefs.getString("logged-in");
+      debugPrint("HELLO!!");
       if (x == null){
         setState(() {
           userIsLoggedIn = false;
@@ -107,14 +110,7 @@ class BottomNavBar extends StatelessWidget {
         CupertinoButton(
           child: const Icon(CupertinoIcons.settings, size: 40.0, color: Colors.black),
           onPressed: () async {
-            // await FirebaseAuth.instance.verifyPhoneNumber(
-            //     phoneNumber: '+1-734-383-3455',
-            //     verificationCompleted: (PhoneAuthCredential credential) {},
-            //     verificationFailed: (FirebaseAuthException e) {},
-            //     codeSent: (String verificationId, int? resendToken) {},
-            //     codeAutoRetrievalTimeout: (String verificationId) {},
-            //   );
-            
+            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const SettingsPage()));
           },
         ),
 
