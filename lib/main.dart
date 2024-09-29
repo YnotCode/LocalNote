@@ -16,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'note_upload.dart';
 import 'friends.dart';
 import 'setting_page.dart';
+import 'get_name_page.dart';
 
 void main() async {
   SharedPreferences.setMockInitialValues({});
@@ -36,6 +37,9 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
 
   bool userIsLoggedIn = false;
+  bool exists = false;
+
+  String? phoneNumber;
 
   @override 
   void initState() {
@@ -58,17 +62,55 @@ class _MainAppState extends State<MainApp> {
 
     return MaterialApp(
       home: Scaffold(
-        body: userIsLoggedIn ? 
+        body: userIsLoggedIn && exists ? 
           const MainMap()
-         : LoginPage(onSuccess: (phNumber) async {
-          final prefs = await SharedPreferences.getInstance();
-          prefs.setString("logged-in", "true");
-          prefs.setString("phone-number", phNumber);
-          setState(() {
-            userIsLoggedIn = true;
-          });
-        },),
-        bottomNavigationBar: userIsLoggedIn ? const SafeArea(
+         : userIsLoggedIn ? 
+            GetNamePage(onSuccess: (name) async {
+              final prefs = await SharedPreferences.getInstance();
+              prefs.setString("name", name);
+              setState(() {
+                exists = true;
+              });
+
+              FirebaseFirestore.instance.collection("users").add({
+                "name": name,
+                "phoneNumber": prefs.getString("phone-number"),
+                "friends": [],
+                "notes": [],
+                "location": "22.3193, 87.2996",
+              });
+            },)
+            : 
+            LoginPage(onSuccess: (phNumber) async {
+              final query = await FirebaseFirestore.instance.collection("users").where("phoneNumber", isEqualTo: phNumber).count().get();
+              var count = query.count;
+
+              setState(() {
+                userIsLoggedIn = true;
+              });
+              final prefs = await SharedPreferences.getInstance();
+              prefs.setString("logged-in", "true");
+              prefs.setString("phone-number", phNumber);
+              FirebaseFirestore.instance.collection("users").where("phoneNumber", isEqualTo: phNumber).get().then((querySnapshot) {
+                querySnapshot.docs.forEach((doc) {
+                  prefs.setString("name", doc["name"]);
+                });
+              });
+
+              if (count != 0) {
+                setState(() {
+                  exists = true;
+                });
+
+                FirebaseFirestore.instance.collection("users").where("phoneNumber", isEqualTo: phNumber).get().then((querySnapshot) {
+                  querySnapshot.docs.forEach((doc) {
+                    prefs.setString("name", doc["name"]);
+                  });
+                });
+              }
+            },
+          ),
+        bottomNavigationBar: userIsLoggedIn && exists ? const SafeArea(
           bottom: true,
           child: BottomNavBar(),
         ) : null,
